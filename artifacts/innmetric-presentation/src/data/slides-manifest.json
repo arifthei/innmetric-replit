@@ -1,0 +1,50 @@
+[
+  {
+    "id": "fefa50b5-e9c6-401a-84ea-885aed52c7a3",
+    "position": 1,
+    "filepath": "src/pages/slides/Cover.tsx",
+    "title": "InnMetric: From evidence to accountable service",
+    "description": "InnMetric: From evidence to accountable service",
+    "speakerNotes": ""
+  },
+  {
+    "id": "b394ccf1-a5e4-4111-9727-285e37380ba6",
+    "position": 2,
+    "filepath": "src/pages/slides/Discovery.tsx",
+    "title": "Discover signals. Confirm needs.",
+    "description": "Discover signals. Confirm needs.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "cd2ff509-96aa-409e-9605-3fe78934e773",
+    "position": 3,
+    "filepath": "src/pages/slides/Journey.tsx",
+    "title": "One connected service journey",
+    "description": "One connected service journey",
+    "speakerNotes": ""
+  },
+  {
+    "id": "69434320-bd17-44cc-8ffd-f1fd7f147ad0",
+    "position": 4,
+    "filepath": "src/pages/slides/Funds.tsx",
+    "title": "Savings are not spendable cash",
+    "description": "Savings are not spendable cash",
+    "speakerNotes": ""
+  },
+  {
+    "id": "be9dac40-d167-4d24-9738-61111c566ed0",
+    "position": 5,
+    "filepath": "src/pages/slides/BusinessLines.tsx",
+    "title": "Two business lines. Separate finances.",
+    "description": "Two business lines. Separate finances.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "9f2f6b2c-0662-45d1-9263-40fb1998199c",
+    "position": 6,
+    "filepath": "src/pages/slides/Next.tsx",
+    "title": "Demonstrate today. Validate next.",
+    "description": "Demonstrate today. Validate next.",
+    "speakerNotes": ""
+  }
+]

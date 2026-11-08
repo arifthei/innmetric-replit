@@ -1,0 +1,28 @@
+kind = "slides"
+previewPath = "/innmetric-presentation/"
+title = "InnMetric Programme Pitch"
+description = "Six-slide InnMetric pitch featuring actual demo screenshots, proposed programme workflow, illustrative funding and separate commercial services."
+version = "1.0.0"
+id = "artifacts/innmetric-presentation"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/innmetric-presentation/" ]
+localPort = 24016
+
+[services.development]
+run = "pnpm --filter @workspace/innmetric-presentation run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/innmetric-presentation", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/innmetric-presentation/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24016"
+BASE_PATH = "/innmetric-presentation/"

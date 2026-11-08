@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "7N9aLJM-TAV6wCjxjDw13"
+uri = "file://.local/outputs/InnMetric-Programme-Pitch.pptx"
+type = "slides"
+title = "InnMetric Programme Pitch (PPTX)"
+description = "Six-slide presentation with actual app screenshots and clearly labelled synthetic programme examples."
+logical_id = "d835545d-a69c-41c9-9dfc-bc91ad44ad90"
+content_hash = "sha256:b5ad93dba1e679e2349a90f85c985b3d80b5f2d76a8dbd5d6c9d76eb8040a7dd"
+size = 745420
+mtime_ms = 1794136740938
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:fa266c81-cfdb-43fc-bbbd-4b4826afe325/d835545d-a69c-41c9-9dfc-bc91ad44ad90/24573deb-b10a-489e-b521-a25f1a65035c"
+storage_version_token = "1794136741663494"
+content_type = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
