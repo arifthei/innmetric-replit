@@ -7,6 +7,7 @@ Planning a synthetic hotel-discovery and service-coordination demo with departme
 - Read root documents `00_START_HERE.md` through `06_BUILD_SPRINT.md`, all three `fixtures/` JSON files, and `docs/ssot/replit-source.md` before implementation. The latter preserves the uploaded project instructions verbatim.
 - Version 3 supersedes earlier packs. Later explicit founder decisions override it only when recorded; unresolved policies must not be invented.
 - Current authorization is planning only. Creating the project is not authorization to implement. Wait for explicit approval of the proposed build task.
+- Deadline update: founder has two hours for a pitched mock demo and requested a separate fallback-prototype agent. The fallback is a distinct client-only simulation task; accepting it does not authorize the full-stack build. Prefer a complete presentation journey over optional features.
 - Founder-confirmed working arrangement: Agent builds, software lead reviews; founder owns product decisions and acceptance. See `docs/WORKING_TOGETHER.md` and `docs/DECISIONS.md`. This does not waive the implementation approval gate.
 - Department alone administers programme cash. InnMetric may co-approve but never hold or execute pool payments. Commercial records remain separate.
 - Savings are not cash. Preserve source and hotel attribution; require explicit cross-hotel authorization, version-bound distinct-role approvals, atomic posting and idempotency.

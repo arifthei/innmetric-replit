@@ -30,14 +30,21 @@ The collection approval must refer to the explicit amount and current record ver
 
 The founder selected **Agent builds, lead reviews**. Agent performs implementation and supplies test evidence; the software lead reviews technical decisions and changes; the founder owns product/policy decisions and acceptance. Selecting this arrangement does not authorize implementation or publication.
 
-## Open planning questions
+## Two-hour presentation fallback
+
+The founder states there are two hours to complete a mock demo for pitching/presentation and requests a separate agent to build a fallback prototype. The founder and software lead use separate Replit accounts on different laptops. Their agreed roles remain Agent builds, lead reviews.
+
+Proposed delivery: an independently runnable, client-only prototype using synthetic fixtures, with all workflow controls explicitly simulated. It does not replace or claim completion of the server-enforced full-stack plan. No real identity, shared database, financial execution or production security is implied.
+
+Prioritize this fallback immediately through its own task approval. The full-stack task remains separately scoped and unstarted unless explicitly accepted. Do not spend the two-hour window waiting for the complete backend before starting the presentation fallback.
+
+## Remaining questions for full-stack work
 
 | Question | Proposed decision owner | Consequence / safe planning position |
 | --- | --- | --- |
 | What does savings attribution sign-off require? | Founder with lead | Comparability, channel mix, scope, timing, direct costs and evidence must be explicitly reviewed; equal room nights are insufficient. |
 | Should the demo add Hotel A/C representative actors? | Lead with founder | Needed if their own-role confirmations or commercial interactions are demonstrated; never impersonate Hotel B. |
 | How should an approved case edit behave after funds are reserved or paid? | Lead with founder | Invalidate approvals before further action; do not silently mutate posted ledger history or leave stale commitments spendable. |
-| What is the actual demo deadline and audience? | Founder | Four-to-five hours is a target, not a promise or verified estimate. |
 
 ## Deferred policy and production decisions
 

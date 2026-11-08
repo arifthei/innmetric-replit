@@ -41,6 +41,26 @@ Before work starts, record task owner, acceptance criteria, affected modules, de
 
 Handoff template: owner; completed behavior; tests actually run and results; unresolved issues; changed contract; next action; reviewer.
 
+## Two accounts, two laptops, two-hour demo
+
+1. Founder opens this project's Invite control and invites the lead's account by email or sends a private join link.
+2. Lead signs into their own Replit account and accepts/opens the invitation to this same project. Do not fork or create a duplicate project for review.
+3. Collaborators can access project files, project chat history/memories and the shared task board, and can start their own Agent threads. This grants project collaboration access, not access to the founder's unrelated projects.
+4. Founder owns this product/presentation conversation. Lead uses a separate review conversation and sends findings rather than editing the active implementation.
+5. Start the fallback task with a task agent. It runs in isolation; its changes are not in the main project until reviewed and applied. Lead checks the Ready task preview and approves integration only after reviewing the demo.
+
+Suggested timeboxes, not a delivery guarantee:
+
+| Time from kickoff | Founder | Software lead | Fallback task agent |
+| --- | --- | --- | --- |
+| 0–10 minutes | Invite lead, approve fallback, freeze scope | Accept invite, read confirmed decisions | Start independent prototype |
+| 10–60 minutes | Prepare three-minute narration | Review rules and inspect available progress | Build complete clickable story |
+| 60–90 minutes | Rehearse with available preview | Review balances, denied actions, all confirmations | Fix only presentation blockers |
+| 90–110 minutes | Freeze story and prepare backup recording | Review/apply task changes; check demo on both laptops | Finish essential fixes and handoff |
+| 110–120 minutes | Rehearse final pitch | Keep known-working preview open | No new features |
+
+If a full build is also explicitly started, keep it separate from the fallback and do not wait on it. One person—the lead—coordinates application of changes. Do not change dependencies, shared API or schema from the fallback task.
+
 ## Platform references
 
 - https://docs.replit.com/build/invite-teammates
