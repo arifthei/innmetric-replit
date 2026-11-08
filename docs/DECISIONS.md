@@ -8,11 +8,16 @@
 - Preserve source documents verbatim at initial import. Original uploaded build instructions are in `docs/ssot/replit-source.md`; active project instructions also retain scaffold run commands.
 - The demo uses only synthetic records and simulated financial actions. No real affiliation, mandate, integration or programme budget is established.
 
-## Pending decisions
+## Cross-hotel allocation — confirmed 2026-11-08
+
+The founder selected **Joint reviewers only**. InnMetric and department reviewers authorize cross-hotel allocation; no Hotel A acknowledgement or consent is required as a demo workflow gate. Explicit allocation authorization, distinct actors, version-bound approvals, source/hotel attribution and department-only execution remain mandatory.
+
+The original fixture's pending `hotelAttributionAcknowledgement` is superseded by this decision and must not block the demo. Preserve the original fixture as source material; adapt its interpretation during implementation. This decision does not establish legal ownership rules.
+
+## Remaining pending decisions
 
 | Question | Proposed decision owner | Consequence / safe planning position |
 | --- | --- | --- |
-| Who authorizes cross-hotel allocation, and who acknowledges Hotel A attribution? | Founder with lead | Do not auto-approve. Fixture is draft and acknowledgement pending; Hotel A actor is absent. |
 | What does savings attribution sign-off require? | Founder with lead | Comparability, channel mix, scope, timing, direct costs and evidence must be explicitly reviewed; equal room nights are insufficient. |
 | Is a manual collection amount approved separately from savings? | Founder with lead | Require explicit approval of the amount; never infer a contribution percentage from equal fixture values. |
 | Who confirms final service outcome: hotel, independent reviewer, or both? | Founder | Provider delivery alone never closes the case; define rejection, partial delivery and remaining actions. |
