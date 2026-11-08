@@ -20,12 +20,17 @@ The founder specified: “Tourism dept, hotel & innmetric together”. Final ser
 
 This supersedes the earlier ambiguous hotel/reviewer wording. It does not change the separate joint approval and department execution rules for funding.
 
+## Collection amount approval — confirmed 2026-11-08
+
+The founder selected **In a separate approval step**. Approval of the explicit collection amount is separate from savings verification and requires both InnMetric and the Tourism Department. Savings approval alone does not authorize collection. Following collection approval, only the department can post the simulated actual receipt; approvals alone create no spendable cash.
+
+The collection approval must refer to the explicit amount and current record version. Changing that amount requires renewed joint approval. The fixture's equal savings and receipt amounts do not establish a contribution percentage.
+
 ## Remaining pending decisions
 
 | Question | Proposed decision owner | Consequence / safe planning position |
 | --- | --- | --- |
 | What does savings attribution sign-off require? | Founder with lead | Comparability, channel mix, scope, timing, direct costs and evidence must be explicitly reviewed; equal room nights are insufficient. |
-| Is a manual collection amount approved separately from savings? | Founder with lead | Require explicit approval of the amount; never infer a contribution percentage from equal fixture values. |
 | Should the demo add Hotel A/C representative actors? | Lead with founder | Needed if their own-role confirmations or commercial interactions are demonstrated; never impersonate Hotel B. |
 | How should an approved case edit behave after funds are reserved or paid? | Lead with founder | Invalidate approvals before further action; do not silently mutate posted ledger history or leave stale commitments spendable. |
 | Does the proposed team ownership match how the founder and lead work? | Founder and lead | Working agreement remains a recommendation, not an assigned commitment. |
