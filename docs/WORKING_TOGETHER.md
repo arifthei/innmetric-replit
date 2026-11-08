@@ -1,14 +1,14 @@
 # Shared planning and delivery
 
-Status: recommended working agreement, awaiting founder and software-lead confirmation. No implementation is authorized yet.
+Status: founder confirmed “Agent builds, lead reviews” on 2026-11-08. No implementation is authorized yet. Detailed review arrangements below guide that split; no independent confirmation from the lead has been received.
 
 ## Ownership
 
-| Area | Proposed accountable owner | Other participant |
+| Area | Accountable owner | Other participant |
 | --- | --- | --- |
 | Product scope, programme policies, demo claims | Founder | Lead advises on feasibility |
 | Architecture, data model, API, security, ledger | Software lead | Founder accepts product consequences |
-| Bounded implementation and test evidence | Assigned developer or Agent | Lead reviews technical changes |
+| Bounded implementation and test evidence | Agent | Lead reviews technical changes |
 | Business acceptance | Founder | Lead presents verified results and limits |
 | Release readiness | Lead | Founder confirms publication |
 
@@ -28,7 +28,7 @@ Before work starts, record task owner, acceptance criteria, affected modules, de
 
 - Founder: resolve pending policy questions, refine the three-minute demo narrative and review visible acceptance criteria.
 - Lead: review state transitions, financial invariants, permissions and API contracts.
-- Once implementation is approved: Agent/developer implements a bounded milestone while the founder reviews demo content. If another developer works in parallel, assign a genuinely separate module in isolation.
+- Once implementation is approved: Agent implements a bounded milestone while the founder reviews demo content and the lead reviews technical decisions. The lead supplies review findings rather than running a competing implementation against the same files.
 - Keep discovery, approvals and ledger milestones sequential where they share records. Do not split tasks simply to appear parallel.
 
 ## Change and review loop

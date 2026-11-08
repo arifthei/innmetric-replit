@@ -7,7 +7,7 @@ Planning a synthetic hotel-discovery and service-coordination demo with departme
 - Read root documents `00_START_HERE.md` through `06_BUILD_SPRINT.md`, all three `fixtures/` JSON files, and `docs/ssot/replit-source.md` before implementation. The latter preserves the uploaded project instructions verbatim.
 - Version 3 supersedes earlier packs. Later explicit founder decisions override it only when recorded; unresolved policies must not be invented.
 - Current authorization is planning only. Creating the project is not authorization to implement. Wait for explicit approval of the proposed build task.
-- See `docs/WORKING_TOGETHER.md` for proposed ownership and `docs/DECISIONS.md` for unresolved decisions.
+- Founder-confirmed working arrangement: Agent builds, software lead reviews; founder owns product decisions and acceptance. See `docs/WORKING_TOGETHER.md` and `docs/DECISIONS.md`. This does not waive the implementation approval gate.
 - Department alone administers programme cash. InnMetric may co-approve but never hold or execute pool payments. Commercial records remain separate.
 - Savings are not cash. Preserve source and hotel attribution; require explicit cross-hotel authorization, version-bound distinct-role approvals, atomic posting and idempotency.
 - Founder decision: cross-hotel allocation requires joint InnMetric/department reviewers only; Hotel A acknowledgement is not required. This overrides the original fixture's pending acknowledgement as a gate, not its attribution requirements.

@@ -26,14 +26,17 @@ The founder selected **In a separate approval step**. Approval of the explicit c
 
 The collection approval must refer to the explicit amount and current record version. Changing that amount requires renewed joint approval. The fixture's equal savings and receipt amounts do not establish a contribution percentage.
 
-## Remaining pending decisions
+## Team responsibilities — confirmed 2026-11-08
+
+The founder selected **Agent builds, lead reviews**. Agent performs implementation and supplies test evidence; the software lead reviews technical decisions and changes; the founder owns product/policy decisions and acceptance. Selecting this arrangement does not authorize implementation or publication.
+
+## Open planning questions
 
 | Question | Proposed decision owner | Consequence / safe planning position |
 | --- | --- | --- |
 | What does savings attribution sign-off require? | Founder with lead | Comparability, channel mix, scope, timing, direct costs and evidence must be explicitly reviewed; equal room nights are insufficient. |
 | Should the demo add Hotel A/C representative actors? | Lead with founder | Needed if their own-role confirmations or commercial interactions are demonstrated; never impersonate Hotel B. |
 | How should an approved case edit behave after funds are reserved or paid? | Lead with founder | Invalidate approvals before further action; do not silently mutate posted ledger history or leave stale commitments spendable. |
-| Does the proposed team ownership match how the founder and lead work? | Founder and lead | Working agreement remains a recommendation, not an assigned commitment. |
 | What is the actual demo deadline and audience? | Founder | Four-to-five hours is a target, not a promise or verified estimate. |
 
 ## Deferred policy and production decisions
