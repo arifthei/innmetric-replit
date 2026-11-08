@@ -11,6 +11,7 @@ Planning a synthetic hotel-discovery and service-coordination demo with departme
 - Department alone administers programme cash. InnMetric may co-approve but never hold or execute pool payments. Commercial records remain separate.
 - Savings are not cash. Preserve source and hotel attribution; require explicit cross-hotel authorization, version-bound distinct-role approvals, atomic posting and idempotency.
 - Founder decision: cross-hotel allocation requires joint InnMetric/department reviewers only; Hotel A acknowledgement is not required. This overrides the original fixture's pending acknowledgement as a gate, not its attribution requirements.
+- Founder decision: final service outcome requires confirmation from the Tourism Department, the beneficiary hotel and InnMetric together. Provider delivery alone cannot close a case; missing confirmation leaves it awaiting verification.
 - Rates and prices remain null, not zero. AI never approves, pays, certifies savings or establishes affordability.
 - All demo data and operations are synthetic. No government mandate, affiliation, live discovery or real payments are established. Real uploads and real customer data are out of scope.
 

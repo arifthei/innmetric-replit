@@ -14,13 +14,18 @@ The founder selected **Joint reviewers only**. InnMetric and department reviewer
 
 The original fixture's pending `hotelAttributionAcknowledgement` is superseded by this decision and must not block the demo. Preserve the original fixture as source material; adapt its interpretation during implementation. This decision does not establish legal ownership rules.
 
+## Final service outcome — confirmed 2026-11-08
+
+The founder specified: “Tourism dept, hotel & innmetric together”. Final service outcome confirmation therefore requires all three parties: the Tourism Department, the beneficiary hotel and InnMetric. Provider delivery is a separate submission and does not close the case. Until all three confirmations exist, final verification is incomplete; partial or rejected work and remaining actions stay visible.
+
+This supersedes the earlier ambiguous hotel/reviewer wording. It does not change the separate joint approval and department execution rules for funding.
+
 ## Remaining pending decisions
 
 | Question | Proposed decision owner | Consequence / safe planning position |
 | --- | --- | --- |
 | What does savings attribution sign-off require? | Founder with lead | Comparability, channel mix, scope, timing, direct costs and evidence must be explicitly reviewed; equal room nights are insufficient. |
 | Is a manual collection amount approved separately from savings? | Founder with lead | Require explicit approval of the amount; never infer a contribution percentage from equal fixture values. |
-| Who confirms final service outcome: hotel, independent reviewer, or both? | Founder | Provider delivery alone never closes the case; define rejection, partial delivery and remaining actions. |
 | Should the demo add Hotel A/C representative actors? | Lead with founder | Needed if their own-role confirmations or commercial interactions are demonstrated; never impersonate Hotel B. |
 | How should an approved case edit behave after funds are reserved or paid? | Lead with founder | Invalidate approvals before further action; do not silently mutate posted ledger history or leave stale commitments spendable. |
 | Does the proposed team ownership match how the founder and lead work? | Founder and lead | Working agreement remains a recommendation, not an assigned commitment. |
