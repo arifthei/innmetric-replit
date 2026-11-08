@@ -26,6 +26,14 @@ The founder selected **In a separate approval step**. Approval of the explicit c
 
 The collection approval must refer to the explicit amount and current record version. Changing that amount requires renewed joint approval. The fixture's equal savings and receipt amounts do not establish a contribution percentage.
 
+## Savings attribution, hotel perspectives, and funded edits — confirmed 2026-11-08
+
+- **Savings attribution sign-off:** both InnMetric and department reviewers must review scope, timing, channel mix and cost evidence before approving the current comparison version. Equal room nights alone remain insufficient.
+- **Hotel perspectives:** keep four simulated role types, with a hotel-representative perspective selectable for Hotel A, Hotel B or Hotel C. The selected hotel identity scopes hotel actions.
+- **Funded edits:** a material case version is locked after reservation or payment. Do not overwrite posted events or silently alter an active commitment; append a linked correction request and preserve the original history.
+
+These are founder/software-lead-confirmed workflow choices for the synthetic demo. They do not establish production identity, programme policy, or legal ownership.
+
 ## Team responsibilities — confirmed 2026-11-08
 
 The founder selected **Agent builds, lead reviews**. Agent performs implementation and supplies test evidence; the software lead reviews technical decisions and changes; the founder owns product/policy decisions and acceptance. Selecting this arrangement does not authorize implementation or publication.
@@ -40,11 +48,7 @@ Prioritize this fallback immediately through its own task approval. The full-sta
 
 ## Remaining questions for full-stack work
 
-| Question | Proposed decision owner | Consequence / safe planning position |
-| --- | --- | --- |
-| What does savings attribution sign-off require? | Founder with lead | Comparability, channel mix, scope, timing, direct costs and evidence must be explicitly reviewed; equal room nights are insufficient. |
-| Should the demo add Hotel A/C representative actors? | Lead with founder | Needed if their own-role confirmations or commercial interactions are demonstrated; never impersonate Hotel B. |
-| How should an approved case edit behave after funds are reserved or paid? | Lead with founder | Invalidate approvals before further action; do not silently mutate posted ledger history or leave stale commitments spendable. |
+No additional workflow-policy questions were identified for the scoped synthetic demo.
 
 ## Deferred policy and production decisions
 

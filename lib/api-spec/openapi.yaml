@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: programme-demo
+    description: Synthetic, visitor-isolated InnMetric programme demo
 paths:
   /healthz:
     get:
@@ -24,7 +26,78 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /demo:
+    get:
+      operationId: getProgrammeDemo
+      tags: [programme-demo]
+      summary: Load or create the visitor's synthetic demo session
+      parameters:
+        - $ref: "#/components/parameters/DemoSession"
+      responses:
+        "200":
+          description: Demo state and append-only event history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoSnapshot"
+  /demo/actions:
+    post:
+      operationId: applyProgrammeDemoAction
+      tags: [programme-demo]
+      summary: Apply one server-authorized action to the demo session
+      parameters:
+        - $ref: "#/components/parameters/DemoSessionRequired"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoActionRequest"
+      responses:
+        "200":
+          description: Updated session state and event history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoSnapshot"
+        "400":
+          description: Invalid action or payload
+        "403":
+          description: The simulated role cannot perform this action
+        "409":
+          description: The action conflicts with the current version or ledger
+  /demo/export:
+    get:
+      operationId: exportProgrammeDemo
+      tags: [programme-demo]
+      summary: Export synthetic evidence, decisions, funds, and open items
+      parameters:
+        - $ref: "#/components/parameters/DemoSessionRequired"
+      responses:
+        "200":
+          description: Synthetic session export
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoExport"
 components:
+  parameters:
+    DemoSession:
+      name: X-Demo-Session
+      in: header
+      required: false
+      description: Opaque per-tab demo session identifier; not production authentication
+      schema:
+        type: string
+        format: uuid
+    DemoSessionRequired:
+      name: X-Demo-Session
+      in: header
+      required: true
+      description: Opaque per-tab demo session identifier; not production authentication
+      schema:
+        type: string
+        format: uuid
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +106,121 @@ components:
           type: string
       required:
         - status
+    DemoRole:
+      type: string
+      enum: [innmetric, department, hotel, provider]
+    DemoAction:
+      type: string
+      enum:
+        - role.switch
+        - discovery.run
+        - need.confirm
+        - consultation.add
+        - savings.edit
+        - savings.approve
+        - collection.set
+        - collection.approve
+        - collection.post
+        - allocation.approve
+        - support.approve
+        - support.edit
+        - support.reserve
+        - support.pay
+        - support.directPayment
+        - quote.submit
+        - delivery.mark
+        - outcome.confirm
+        - commercial.request
+        - commercial.propose
+        - commercial.invoiceDraft
+        - ledger.correctionRequest
+    DemoActionRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        action:
+          $ref: "#/components/schemas/DemoAction"
+        payload:
+          type: object
+          additionalProperties: true
+        idempotencyKey:
+          type: string
+          maxLength: 120
+      required: [action, payload]
+    DemoEvent:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        sequence:
+          type: integer
+        actorId:
+          type: string
+        actorRole:
+          type: string
+        action:
+          type: string
+        entityId:
+          type: string
+        previousStatus:
+          type: [string, "null"]
+        newStatus:
+          type: [string, "null"]
+        reason:
+          type: string
+        evidenceIds:
+          type: array
+          items:
+            type: string
+        payload:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, sequence, actorId, actorRole, action, entityId, reason, evidenceIds, payload, createdAt]
+    DemoSnapshot:
+      type: object
+      additionalProperties: false
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        state:
+          type: object
+          additionalProperties: true
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/DemoEvent"
+      required: [sessionId, version, state, events]
+    DemoExport:
+      type: object
+      additionalProperties: true
+      properties:
+        dataMode:
+          type: string
+          const: synthetic
+        exportedAt:
+          type: string
+          format: date-time
+        sessionId:
+          type: string
+          format: uuid
+        state:
+          type: object
+          additionalProperties: true
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/DemoEvent"
+        openItems:
+          type: array
+          items:
+            type: string
+      required: [dataMode, exportedAt, sessionId, state, events, openItems]
 
