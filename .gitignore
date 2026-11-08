@@ -53,3 +53,17 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Original planning documents retained locally; consolidated in /plan.md.
+/00_START_HERE.md
+/01_PRODUCT_AND_BUSINESS.md
+/02_PRODUCT_DEMO.md
+/03_DATA_AND_RULES.md
+/04_ARCHITECTURE_AND_AI.md
+/05_TESTS_AND_SUCCESS.md
+/06_BUILD_SPRINT.md
+/docs/DECISIONS.md
+/docs/DEMO_RELEASE.md
+/docs/REQUIREMENTS_TO_TESTS.md
+/docs/WORKING_TOGETHER.md
+/docs/ssot/replit-source.md

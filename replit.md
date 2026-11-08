@@ -4,11 +4,11 @@ Planning a synthetic hotel-discovery and service-coordination demo with departme
 
 ## Source of truth and implementation gate
 
-- Read root documents `00_START_HERE.md` through `06_BUILD_SPRINT.md`, all three `fixtures/` JSON files, and `docs/ssot/replit-source.md` before implementation. The latter preserves the uploaded project instructions verbatim.
+- Read `plan.md` and all three `fixtures/` JSON files before implementation. The plan consolidates the approved build plan, original SSOT, decisions, collaboration guidance and release/test documentation verbatim. Original Markdown documents are retained locally but intentionally untracked; fresh clones must use the corresponding sections in `plan.md`.
 - Version 3 supersedes earlier packs. Later explicit founder decisions override it only when recorded; unresolved policies must not be invented.
-- Founder authorized implementation on 2026-11-08. Publication still requires separate confirmation. Record later founder/lead policy decisions in `docs/DECISIONS.md`.
+- Founder authorized implementation on 2026-11-08. Publication still requires separate confirmation. Record later founder/lead policy decisions in `plan.md`.
 - The client-only fallback was a separate prototype effort. This server-backed demo was implemented only after the founder explicitly authorized it on 2026-11-08.
-- Founder-confirmed working arrangement: Agent implements and supplies evidence; software lead reviews technical decisions; founder owns product decisions and acceptance. See `docs/WORKING_TOGETHER.md` and `docs/DECISIONS.md`.
+- Founder-confirmed working arrangement: Agent implements and supplies evidence; software lead reviews technical decisions; founder owns product decisions and acceptance. See the working-together and decisions sections in `plan.md`.
 - Department alone administers programme cash. InnMetric may co-approve but never hold or execute pool payments. Commercial records remain separate.
 - Savings are not cash. Preserve source and hotel attribution; require explicit cross-hotel authorization, version-bound distinct-role approvals, atomic posting and idempotency.
 - Founder decision: cross-hotel allocation requires joint InnMetric/department reviewers only; Hotel A acknowledgement is not required. This overrides the original fixture's pending acknowledgement as a gate, not its attribution requirements.
@@ -47,7 +47,8 @@ Planning a synthetic hotel-discovery and service-coordination demo with departme
 - `lib/db/src/schema/programme-demo.ts` — PostgreSQL session/event schema; schema definitions are pushed to development with the db workspace command
 - `lib/api-spec/openapi.yaml` — API contract source; run API-spec codegen after contract edits
 - `fixtures/` — immutable synthetic source records and expected/negative scenarios
-- `docs/REQUIREMENTS_TO_TESTS.md` — acceptance-to-test checklist
+- `plan.md` — consolidated plan, business rules and acceptance-to-test checklist
+- `InnMetric-Programme-Pitch.pptx` — presentation export
 
 ## Architecture decisions
 
