@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/innmetric-pitch/"
+title = "InnMetric Pitch Prototype"
+description = "A client-only, synthetic-data presentation prototype demonstrating InnMetric hotel discovery, department-administered programme support, and separate commercial services."
+version = "1.0.0"
+id = "artifacts/innmetric-pitch"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/innmetric-pitch/" ]
+localPort = 23425
+
+[services.development]
+run = "pnpm --filter @workspace/innmetric-pitch run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/innmetric-pitch", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/innmetric-pitch/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23425"
+BASE_PATH = "/innmetric-pitch/"
