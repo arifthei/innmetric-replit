@@ -1,6 +1,17 @@
-# [Project name]
+# InnMetric Tourism Programme
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Planning a synthetic hotel-discovery and service-coordination demo with department-administered support and a separate InnMetric commercial business.
+
+## Source of truth and implementation gate
+
+- Read root documents `00_START_HERE.md` through `06_BUILD_SPRINT.md`, all three `fixtures/` JSON files, and `docs/ssot/replit-source.md` before implementation. The latter preserves the uploaded project instructions verbatim.
+- Version 3 supersedes earlier packs. Later explicit founder decisions override it only when recorded; unresolved policies must not be invented.
+- Current authorization is planning only. Creating the project is not authorization to implement. Wait for explicit approval of the proposed build task.
+- See `docs/WORKING_TOGETHER.md` for proposed ownership and `docs/DECISIONS.md` for unresolved decisions.
+- Department alone administers programme cash. InnMetric may co-approve but never hold or execute pool payments. Commercial records remain separate.
+- Savings are not cash. Preserve source and hotel attribution; require explicit cross-hotel authorization, version-bound distinct-role approvals, atomic posting and idempotency.
+- Rates and prices remain null, not zero. AI never approves, pays, certifies savings or establishes affordability.
+- All demo data and operations are synthetic. No government mandate, affiliation, live discovery or real payments are established. Real uploads and real customer data are out of scope.
 
 ## Run & Operate
 
