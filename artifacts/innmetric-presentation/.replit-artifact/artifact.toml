@@ -1,7 +1,7 @@
 kind = "slides"
 previewPath = "/innmetric-presentation/"
 title = "InnMetric Programme Pitch"
-description = "Six-slide InnMetric pitch featuring actual demo screenshots, proposed programme workflow, illustrative funding and separate commercial services."
+description = "Four-slide pitch for a proposed independent hotel pilot and Tourism Department programme."
 version = "1.0.0"
 id = "artifacts/innmetric-presentation"
 router = "path"
