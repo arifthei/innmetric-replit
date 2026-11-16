@@ -885,7 +885,7 @@ export function applyDemoAction(
         costs: raw?.costs === true,
       };
       if (Object.values(checks).some((value) => !value)) {
-        fail("Sign-off must review scope, timing, channel mix, and cost evidence.");
+        fail("Sign-off must review scope, timing, channel mix and cost evidence.");
       }
       previousStatus = state.savings.status;
       addApproval(
@@ -979,7 +979,7 @@ export function applyDemoAction(
         proof?.content?.recipient !== state.fixture.programme.fundAdministrator ||
         proof?.content?.amountMinor !== state.collection.amountMinor
       ) {
-        fail("Receipt evidence does not match the approved amount, currency, or recipient.", 409);
+        fail("Receipt evidence does not match the approved amount, currency or recipient.", 409);
       }
       state.ledger.push({
         id: eventId,
@@ -1306,7 +1306,7 @@ export function applyDemoAction(
       }
       const result = payload.result;
       if (!["completed", "partial", "rejected"].includes(String(result))) {
-        fail("Select completed, partial, or rejected as the outcome.");
+        fail("Select completed, partial or rejected as the outcome.");
       }
       const remainingActions = Array.isArray(payload.remainingActions)
         ? payload.remainingActions.map((item) => String(item).trim()).filter(Boolean)

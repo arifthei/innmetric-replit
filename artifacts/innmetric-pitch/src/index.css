@@ -318,9 +318,14 @@
 @media (max-width: 1199px) {
   .app-shell, .app-shell.walk-hidden { grid-template-columns: 216px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: "side main" "walk walk"; }
   .walk { border-left: 0; border-top: 1px solid hsl(var(--sidebar-border)); max-height: 56dvh; }
-  .walk-head { padding: 8px 14px; }
-  .walk-body { padding: 10px 14px; }
-  .walk-current { padding: 10px 12px; }
+  .walk { position: relative; }
+  .walk-head { position: absolute; top: 8px; right: 12px; z-index: 1; padding: 0; border: 0; }
+  .walk-head h2 { display: none; }
+  .walk-head .btn.small, .walk-head .icon-btn { height: 28px; }
+  .walk-head .icon-btn { width: 28px; }
+  .walk-body { padding: 10px 14px 12px; }
+  .walk-current { padding: 0; border: 0; background: transparent; }
+  .walk-count { min-height: 28px; padding-right: 132px; display: flex; align-items: center; }
   .walk-current h3 { font-size: 14px; margin-bottom: 2px; }
   .walk-nav { margin-top: 8px; }
   .walk-compact-toggle { display: inline-flex; }

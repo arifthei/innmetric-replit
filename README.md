@@ -6,6 +6,7 @@ A synthetic hotel-discovery and service-coordination demo for a proposed Tourism
 
 ## Start here
 
+- [Guided demo script, limits and assumptions](DEMO.md)
 - [Consolidated plan and business rules](plan.md)
 - [Download the PowerPoint presentation](InnMetric-Programme-Pitch.pptx)
 - [Project development guidance](replit.md)
@@ -14,6 +15,8 @@ A synthetic hotel-discovery and service-coordination demo for a proposed Tourism
 
 ## What the demo covers
 
+- A founder-delivered hotel service story for a synthetic hotel: intake, Distribution Baseline Audit, Approved Repair Sprint with hotel sign-off, verification and handover and Ongoing Distribution Control.
+- A 12 step guided walkthrough with presenter notes and a seed reset.
 - Evidence-led hotel discovery and hotel confirmation of service needs.
 - Joint InnMetric/department review of savings, collections and support.
 - Department-administered receipts, allocations, reservations and payments.
