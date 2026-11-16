@@ -116,6 +116,13 @@ try {
   await send("Runtime.enable");
   await send("Page.enable");
   await waitFor(
+    "document.body.innerText.includes('Demonstration data. Not a live service or government programme.') && Boolean(document.querySelector('#role-picker'))",
+    "the demo shell with its persistent banner",
+  );
+  // The guided walkthrough opens on its first step. The role-view journey below starts from the overview as InnMetric.
+  await clickButton("Programme overview");
+  await selectValue("#role-picker", "innmetric");
+  await waitFor(
     "document.body.innerText.includes('From evidence to accountable service.')",
     "the InnMetric demo overview",
   );
