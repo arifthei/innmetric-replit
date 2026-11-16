@@ -24,7 +24,7 @@ Planning a synthetic hotel-discovery and service-coordination demo with departme
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm --filter @workspace/api-server run test` — run domain acceptance tests
 - `pnpm --filter @workspace/api-server run test:integration` — run database-backed API acceptance tests
-- `pnpm --filter @workspace/innmetric-pitch run test:browser` — run the Chromium role-view journey
+- `pnpm --filter @workspace/innmetric-pitch run test:browser` — run the Chromium role-view journey and the hotel story journey
 - `pnpm --filter @workspace/api-server run build` — build the API
 - `PORT=4173 BASE_PATH=/innmetric-pitch/ pnpm --filter @workspace/innmetric-pitch run build` — build the pitch app
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
@@ -42,11 +42,12 @@ Planning a synthetic hotel-discovery and service-coordination demo with departme
 
 ## Where things live
 
-- `artifacts/innmetric-pitch/` — five-screen synthetic demo and guided presenter journey
+- `artifacts/innmetric-pitch/` — guided demo: Hotel service screen, proposed programme screens and the walkthrough panel (`src/walkthrough.tsx`, `src/HotelService.tsx`)
+- `DEMO.md` — the 10 minute presenter script, what the demo does not claim and recorded assumptions
 - `artifacts/api-server/src/demo/domain.ts` and `src/routes/programme-demo.ts` — deterministic rules and server-enforced session actions
 - `lib/db/src/schema/programme-demo.ts` — PostgreSQL session/event schema; schema definitions are pushed to development with the db workspace command
 - `lib/api-spec/openapi.yaml` — API contract source; run API-spec codegen after contract edits
-- `fixtures/` — immutable synthetic source records and expected/negative scenarios
+- `fixtures/` — immutable synthetic source records and expected/negative scenarios; `hotel-service.json` holds the hotel service story
 - `plan.md` — consolidated plan, business rules and acceptance-to-test checklist
 - `InnMetric-Programme-Pitch.pptx` — presentation export
 
@@ -68,6 +69,8 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
+- The hotel service record (`state.hotelService`) is commercial: only InnMetric and the Hotel A representative can see it. Live changes need the Hotel A sign-off before `service.applyChange`.
+- "Not bookable" uses kaki. Asagi is for marks and borders only; text and filled buttons use press for AA contrast.
 - The role switcher is simulated and not production identity. Never describe session UUIDs or role checks as production authentication.
 - Verified savings are not cash. Only an independently approved, department-posted synthetic receipt changes pool cash.
 - New route or payload changes start in `lib/api-spec/openapi.yaml`; regenerate API helpers before relying on generated contracts.

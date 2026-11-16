@@ -17,6 +17,7 @@ import {
   RotateCcw,
   ShieldAlert,
   Wallet,
+  Wrench,
 } from "lucide-react";
 import {
   downloadDemoExport,
@@ -27,15 +28,25 @@ import {
   type DemoRole,
   type DemoSnapshot,
 } from "./lib/demo-api";
+import { HotelService } from "./HotelService";
+import { STEPS, Walkthrough, type Page, type PlayAction } from "./walkthrough";
 
-type Page =
-  | "overview"
-  | "discovery"
-  | "case"
-  | "support"
-  | "funds"
-  | "services"
-  | "guide";
+const BANNER = "Demonstration data. Not a live service or government programme.";
+const SESSION_KEY = "innmetric-programme-demo-session-v1";
+const WALK_KEY = "innmetric-walkthrough-v1";
+
+function readWalkPrefs() {
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(WALK_KEY) ?? "{}");
+    return {
+      step: Number.isInteger(stored.step) && stored.step >= 0 && stored.step < STEPS.length ? (stored.step as number) : 0,
+      notes: stored.notes === true,
+      hidden: stored.hidden === true,
+    };
+  } catch {
+    return { step: 0, notes: false, hidden: false };
+  }
+}
 
 type DemoState = {
   dataMode: "synthetic";
@@ -71,6 +82,7 @@ type DemoState = {
   outcome: any;
   commercial: { proposals: any[]; invoices: any[] };
   corrections: any[];
+  hotelService?: any;
 };
 
 type ActionRunner = (
@@ -80,6 +92,7 @@ type ActionRunner = (
 ) => Promise<void>;
 
 const PAGE_LABELS: Record<Page, string> = {
+  hotel: "Hotel service",
   overview: "Programme overview",
   discovery: "Discovery",
   case: "Hotel cases",
@@ -158,9 +171,14 @@ function AppButton({
 function App() {
   const [snapshot, setSnapshot] = useState<DemoSnapshot | null>(null);
   const [sessionId, setSessionId] = useState("");
-  const [page, setPage] = useState<Page>("overview");
+  const [walk, setWalk] = useState(readWalkPrefs);
+  const [page, setPage] = useState<Page>(() => STEPS[readWalkPrefs().step].page);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    try { sessionStorage.setItem(WALK_KEY, JSON.stringify(walk)); } catch {}
+  }, [walk]);
 
   useEffect(() => {
     try {
@@ -175,6 +193,12 @@ function App() {
   }, []);
 
   const state = snapshot?.state as unknown as DemoState | undefined;
+  const loaded = Boolean(snapshot);
+  useEffect(() => {
+    // Align the simulated role with the walkthrough step once the session has loaded.
+    if (loaded && !walk.hidden) goToStep(walk.step);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded]);
   const balances = useMemo(
     () => (state ? calculateBalances(state) : { cash: 0, reserved: 0, available: 0, attributable: 0 }),
     [state],
@@ -203,10 +227,81 @@ function App() {
       ...(role === "hotel" ? { hotelId: hotelId ?? state?.hotelId ?? "hotel-b" } : {}),
     });
   };
-  const resetSession = () => {
-    if (!window.confirm("Start a new private synthetic session? The current session will remain in the demo audit history.")) return;
-    sessionStorage.removeItem("innmetric-programme-demo-session-v1");
-    window.location.reload();
+  const focusStep = (index: number) => {
+    const step = STEPS[index];
+    setPage(step.page);
+    requestAnimationFrame(() => {
+      const target = step.anchor ? document.getElementById(step.anchor) : null;
+      if (target) target.scrollIntoView({ block: "start" });
+      else document.querySelector(".main-area")?.scrollTo({ top: 0 });
+    });
+  };
+  const goToStep = (index: number) => {
+    if (index < 0 || index >= STEPS.length) return;
+    const step = STEPS[index];
+    setWalk((current) => ({ ...current, step: index }));
+    setMessage("");
+    focusStep(index);
+    const hotelId = step.role === "hotel" ? step.hotelId ?? "hotel-b" : null;
+    if (state && (state.role !== step.role || (step.role === "hotel" && state.hotelId !== hotelId))) {
+      void act("role.switch", { role: step.role, ...(hotelId ? { hotelId } : {}) }).then(() => {
+        setMessage("");
+        focusStep(index);
+      });
+    }
+  };
+  /** Presenter shortcut: sends the same server actions a presenter would click, as each simulated role in turn. */
+  const playStep = async () => {
+    if (!sessionId) return;
+    const target = STEPS[walk.step];
+    setBusy(true);
+    setMessage("");
+    try {
+      let role: string = "innmetric";
+      let hotel: string | null = null;
+      let latest = await sendDemoAction(sessionId, "role.switch", { role: "innmetric" });
+      const full = latest.state;
+      const queue: PlayAction[] = STEPS.slice(0, walk.step + 1)
+        .filter((step) => step.track === target.track)
+        .flatMap((step) => step.play ?? [])
+        .flatMap((item) => Array.from({ length: item.remaining(full) }, () => item));
+      const switchTo = async (nextRole: string, nextHotel: string | null) => {
+        if (role === nextRole && hotel === nextHotel) return;
+        latest = await sendDemoAction(sessionId, "role.switch", { role: nextRole, ...(nextHotel ? { hotelId: nextHotel } : {}) });
+        role = nextRole;
+        hotel = nextHotel;
+      };
+      for (const item of queue) {
+        await switchTo(item.role, item.role === "hotel" ? item.hotelId ?? "hotel-b" : null);
+        latest = await sendDemoAction(sessionId, item.action, item.payload ?? {});
+      }
+      await switchTo(target.role, target.role === "hotel" ? target.hotelId ?? "hotel-b" : null);
+      setSnapshot(latest);
+      setMessage(queue.length ? `Recorded ${queue.length} synthetic action${queue.length === 1 ? "" : "s"} for this step, each as its own simulated role.` : "This step's actions were already recorded.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "The step could not be recorded.");
+      await loadDemo(sessionId).then(setSnapshot).catch(() => {});
+    } finally {
+      setBusy(false);
+    }
+  };
+  const resetDemo = async () => {
+    if (!window.confirm("Reset demo data? A fresh synthetic session starts from the seed. The current session stays in the audit history.")) return;
+    setBusy(true);
+    try {
+      const id = crypto.randomUUID();
+      const fresh = await loadDemo(id);
+      sessionStorage.setItem(SESSION_KEY, id);
+      setSessionId(id);
+      setSnapshot(fresh);
+      setWalk((current) => ({ ...current, step: 0 }));
+      focusStep(0);
+      setMessage("Demo data reset to the seed.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Reset failed.");
+    } finally {
+      setBusy(false);
+    }
   };
   const exportSession = async () => {
     if (!sessionId) return;
@@ -221,6 +316,8 @@ function App() {
     }
   };
 
+  const isProgrammePage = ["overview", "discovery", "case", "support", "funds"].includes(page);
+  const programmeStart = STEPS.findIndex((step) => step.track === "programme");
   const nav: { id: Page; label: string; icon: typeof Layers3 }[] = [
     { id: "overview", label: PAGE_LABELS.overview, icon: Layers3 },
     { id: "discovery", label: PAGE_LABELS.discovery, icon: Compass },
@@ -232,28 +329,41 @@ function App() {
 
   if (!state || !snapshot) {
     return (
-      <main className="loading-shell" aria-live="polite">
-        <div className="brand-mark">i</div>
-        <h1>InnMetric programme demo</h1>
-        <p>{message || "Loading a private synthetic session…"}</p>
-        {message && <button className="btn" onClick={() => window.location.reload()}>Try again</button>}
-      </main>
+      <div className="demo-root">
+        <div className="demo-banner" role="note">{BANNER}</div>
+        <main className="loading-shell" aria-live="polite">
+          <div className="brand"><span className="brand-mark" aria-hidden="true" /><span className="brand-name">innmetric</span></div>
+          <h1>Guided demo</h1>
+          <p>{message || "Loading a private synthetic session…"}</p>
+          {message && <button className="btn" onClick={() => window.location.reload()}>Try again</button>}
+        </main>
+      </div>
     );
   }
 
   return (
-    <div className="app-shell">
+    <div className="demo-root">
+    <div className="demo-banner" role="note">{BANNER}</div>
+    <div className={`app-shell${walk.hidden ? " walk-hidden" : ""}`}>
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">i</div>
+          <span className="brand-mark" aria-hidden="true" />
           <div>
             <div className="brand-name">innmetric</div>
-            <div className="brand-sub">programme workspace</div>
+            <div className="brand-sub">guided demo</div>
           </div>
         </div>
         <div>
-          <div className="nav-label" style={{ padding: "0 10px 8px" }}>Workspace</div>
           <nav className="nav-list" aria-label="Main navigation">
+            <div className="nav-group">Hotel service</div>
+            <button
+              className={`nav-item ${page === "hotel" ? "active" : ""}`}
+              onClick={() => { setPage("hotel"); setMessage(""); }}
+              aria-current={page === "hotel" ? "page" : undefined}
+            >
+              <Wrench /><span>{PAGE_LABELS.hotel}</span>
+            </button>
+            <div className="nav-group">Proposed programme</div>
             {nav.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -264,6 +374,7 @@ function App() {
                 <Icon /><span>{label}</span>
               </button>
             ))}
+            <div className="nav-group">Demo</div>
             <button className={`nav-item ${page === "guide" ? "active" : ""}`} onClick={() => setPage("guide")}>
               <Activity /><span>{PAGE_LABELS.guide}</span>
             </button>
@@ -271,17 +382,19 @@ function App() {
         </div>
         <div className="sidebar-bottom">
           <RoleControls state={state} busy={busy} onSwitch={switchRole} />
-          <button className="reset-button" onClick={resetSession}><RotateCcw size={14} /> New session</button>
+          <button className="reset-button" disabled={busy} onClick={() => void resetDemo()}><RotateCcw size={14} /> Reset demo data</button>
         </div>
       </aside>
 
       <main className="main-area">
         <header className="topbar">
-          <div className="crumb"><span>InnMetric</span><ArrowRight size={12} /><strong>{PAGE_LABELS[page]}</strong></div>
+          <div className="crumb"><span>{isProgrammePage ? "Proposed programme" : "InnMetric"}</span><ArrowRight size={12} /><strong>{PAGE_LABELS[page]}</strong></div>
           <div className="top-status">
             <span className="pill amber">Synthetic data</span>
             <span className="pill teal">Server-persisted demo</span>
             <span className="pill neutral">Simulated roles and payments</span>
+            {isProgrammePage && <span className="pill neutral">Proposed programme</span>}
+            {walk.hidden && <AppButton onClick={() => setWalk((current) => ({ ...current, hidden: false }))}><Activity size={14} /> Walkthrough</AppButton>}
             <AppButton onClick={() => void exportSession()} disabled={busy}><Download size={14} /> Export</AppButton>
           </div>
           <div className="mobile-actions"><RoleControls state={state} busy={busy} onSwitch={switchRole} /></div>
@@ -293,21 +406,47 @@ function App() {
               {message}
             </div>
           )}
-          <div className="notice red boundary">
-            <b>Prototype boundary.</b> All records and operations are synthetic. This role switcher is not authentication; no live discovery, government affiliation, real uploads, funds, payments or checkout are connected.
-          </div>
+          {isProgrammePage && (
+            <div className="proposal-tag" data-testid="proposal-tag">
+              <b>Proposed programme.</b> A proposal for discussion with a tourism department. Not adopted, not a government scheme. The department would hold the pool. InnMetric never holds it.
+            </div>
+          )}
+          {page === "hotel" && (
+            <HotelService
+              service={state.hotelService}
+              role={state.role}
+              hotelId={state.hotelId}
+              busy={busy}
+              onAction={act}
+              onOpenProgramme={() => { setWalk((current) => ({ ...current, hidden: false })); goToStep(programmeStart); }}
+            />
+          )}
           {page === "overview" && <Overview state={state} snapshot={snapshot} balances={balances} onNavigate={setPage} />}
           {page === "discovery" && <Discovery state={state} busy={busy} onAction={act} />}
           {page === "case" && <HotelCase state={state} busy={busy} onAction={act} />}
           {page === "support" && <Support state={state} busy={busy} onAction={act} />}
           {page === "funds" && <Funds state={state} balances={balances} busy={busy} onAction={act} />}
           {page === "services" && <Services state={state} busy={busy} onAction={act} />}
-          {page === "guide" && <Guide onNavigate={setPage} />}
+          {page === "guide" && <Guide current={walk.step} onGo={(index) => { setWalk((current) => ({ ...current, hidden: false })); goToStep(index); }} />}
           <footer className="footer-note">
-            Proposed programme · Tourism Department — Demo · No official insignia or endorsement · Data mode: synthetic · Session {sessionId.slice(0, 8)}
+            All records and operations are synthetic. The role switcher is not authentication. No live discovery, government affiliation, real uploads, funds, payments or checkout are connected. No official insignia or endorsement. Session {sessionId.slice(0, 8)}.
           </footer>
         </div>
       </main>
+      {!walk.hidden && (
+        <Walkthrough
+          index={walk.step}
+          busy={busy}
+          notesOn={walk.notes}
+          canPlay={Boolean(sessionId)}
+          onGo={goToStep}
+          onPlay={() => void playStep()}
+          onNotes={(notes) => setWalk((current) => ({ ...current, notes }))}
+          onReset={() => void resetDemo()}
+          onHide={() => setWalk((current) => ({ ...current, hidden: true }))}
+        />
+      )}
+    </div>
     </div>
   );
 }
@@ -378,7 +517,7 @@ function Overview({
   return (
     <>
       <PageHead
-        eyebrow="Proposed tourism support programme"
+        eyebrow="Proposed programme · overview"
         title="From evidence to accountable service."
         text="One persistent synthetic journey links discovery, hotel confirmation, joint review, department-controlled support, provider delivery and outcome confirmation."
         action={<AppButton primary onClick={() => onNavigate("discovery")}><Compass size={15} /> Continue journey</AppButton>}
@@ -455,7 +594,7 @@ function Discovery({ state, busy, onAction }: { state: DemoState; busy: boolean;
   return (
     <>
       <PageHead
-        eyebrow="Analysis of synthetic evidence"
+        eyebrow="Proposed programme · analysis of synthetic evidence"
         title="Discovery queue"
         text="Process one candidate at a time. The queue is bounded, resumable and cites the exact fixture records it evaluated."
         action={<AppButton primary disabled={busy || state.role !== "innmetric" || state.discovery.cursor >= (state.scope?.candidateCount ?? 4)} onClick={() => void onAction("discovery.run")}><Compass size={15} /> Process next candidate</AppButton>}
@@ -522,7 +661,7 @@ function HotelCase({ state, busy, onAction }: { state: DemoState; busy: boolean;
   }
   return (
     <>
-      <PageHead eyebrow="Versioned evidence and decisions" title="Hotel cases" text="Keep Hotel A's cost comparison separate from Hotel B's review-suggested need and representative declaration." />
+      <PageHead eyebrow="Proposed programme · versioned evidence and decisions" title="Hotel cases" text="Keep Hotel A's cost comparison separate from Hotel B's review-suggested need and representative declaration." />
       <div className="grid two">
         {canViewA && state.savings && <section className="card">
           <div className="card-title"><div><div className="card-kicker">Hotel A · distribution costs</div><h2 style={{ marginTop: 6 }}>Baseline versus observed</h2></div><span className={`pill ${savingsVerified ? "teal" : "amber"}`}>{savingsVerified ? "Jointly verified" : state.savings.status.replaceAll("_", " ")}</span></div>
@@ -591,14 +730,14 @@ function Support({ state, busy, onAction }: { state: DemoState; busy: boolean; o
   const [outcome, setOutcome] = useState<"completed" | "partial" | "rejected">("completed");
   const [remaining, setRemaining] = useState("");
   if (!state.support || !state.scope?.canViewSupport) {
-    return <><PageHead eyebrow="Programme support" title="Assigned case only." text="This simulated perspective cannot inspect Hotel B provider work or another hotel's case." /><div className="notice">Switch to InnMetric, Tourism Department, Hotel B, or the assigned service provider perspective.</div></>;
+    return <><PageHead eyebrow="Programme support" title="Assigned case only." text="This simulated perspective cannot inspect Hotel B provider work or another hotel's case." /><div className="notice">Switch to InnMetric, Tourism Department, Hotel B or the assigned service provider perspective.</div></>;
   }
   const allocationReady = joint(state.support.allocation.approvals, state.support.allocation.version, state.support.requestedSubsidyMinor);
   const supportReady = joint(state.support.approvals, state.support.version, state.support.requestedSubsidyMinor);
   const allConfirmed = state.outcome?.status === "verified";
   return (
     <>
-      <PageHead eyebrow="Hotel B · programme support" title="Confirm the need. Fund the work." text="Provider quote, Hotel B contribution, allocation authority, joint approvals, department funding, delivery and outcome confirmation are separate events." />
+      <PageHead eyebrow="Proposed programme · support for Hotel B" title="Confirm the need. Fund the work." text="Provider quote, Hotel B contribution, allocation authority, joint approvals, department funding, delivery and outcome confirmation are separate events." />
       {state.role !== "provider" && <div className="notice">Cross-hotel support remains attributed to Hotel A and requires joint InnMetric/department authorization. Hotel A acknowledgement is not a gate.</div>}
       <div className="grid two" style={{ marginTop: 16 }}>
         <section className="card">
@@ -685,7 +824,7 @@ function Funds({ state, balances, busy, onAction }: { state: DemoState; balances
   const collectionReady = joint(state.collection.approvals, state.collection.version, state.collection.amountMinor);
   return (
     <>
-      <PageHead eyebrow="Department-administered simulated ledger" title="Only collected cash can move." text="Savings, explicit collection approval, receipt, reservation, payment and correction records are separate events." />
+      <PageHead eyebrow="Proposed programme · department-administered simulated ledger" title="Only collected cash can move." text="Savings, explicit collection approval, receipt, reservation, payment and correction records are separate events." />
       <div className="grid three">
         <div className="card"><div className="card-kicker">Cash</div><div className="metric num">{money(balances.cash)}</div><div className="metric-sub">Receipts less posted programme payments</div></div>
         <div className="card"><div className="card-kicker">Reserved</div><div className="metric num">{money(balances.reserved)}</div><div className="metric-sub">Active approved commitments</div></div>
@@ -763,7 +902,7 @@ function Services({ state, busy, onAction }: { state: DemoState; busy: boolean; 
   const proposals = state.commercial.proposals;
   return (
     <>
-      <PageHead eyebrow="Independent InnMetric commercial services" title="Outside the programme pool." text="Subscription and on-demand proposals are separate commercial records. They do not create a programme withdrawal or a zero-price operation." />
+      <PageHead eyebrow="Separate from the proposed programme · InnMetric commercial services" title="Outside the programme pool." text="Subscription and on-demand proposals are separate commercial records. They do not create a programme withdrawal or a zero-price operation." />
       <div className="notice teal">Hotel C has no discovery evidence. A commercial inquiry is not a discovery finding, service need or affordability judgment.</div>
       <div className="grid two" style={{ marginTop: 16 }}>
         <section className="card">
@@ -798,27 +937,19 @@ function Services({ state, busy, onAction }: { state: DemoState; busy: boolean; 
   );
 }
 
-function Guide({ onNavigate }: { onNavigate: (page: Page) => void }) {
-  const steps: [Page, string, string][] = [
-    ["discovery", "1 · Discover", "Show Hotel A's two referenced failures and the uncertain candidates."],
-    ["case", "2 · Review", "Confirm Hotel B's service need separately and review the cost comparison."],
-    ["support", "3 · Approve", "Record distinct reviewer decisions for support and cross-hotel allocation."],
-    ["funds", "4 · Fund", "Approve an explicit collection amount, post the receipt, reserve and pay as the department."],
-    ["support", "5 · Verify", "Separate provider delivery from three-party outcome confirmation."],
-    ["services", "6 · Commercial", "Show proposals and invoice drafts outside programme funds, with prices unconfigured."],
-  ];
+function Guide({ current, onGo }: { current: number; onGo: (index: number) => void }) {
   return (
     <>
-      <PageHead eyebrow="Presenter guide · about three minutes" title="Tell the story in sequence." text="This is a proposed synthetic workflow. Distinguish calculated fixture values from simulated evidence and transactions." />
-      <div className="guide-layout"><section className="card"><h2>Six beats, one persistent session</h2>
-        {steps.map(([page, title, detail]) => <div className="guide-step" key={title}><div className="guide-number">{title.slice(0, 1)}</div><div><strong>{title.slice(4)}</strong><p>{detail}</p></div><AppButton onClick={() => onNavigate(page)}>Open</AppButton></div>)}
+      <PageHead eyebrow="Presenter guide · 10 to 12 minutes" title="Tell the story in sequence." text="The walkthrough panel moves the screen and the simulated role for you. Everything shown is synthetic." />
+      <div className="guide-layout"><section className="card"><h2>{STEPS.length} steps, one persistent session</h2>
+        {STEPS.map((step, index) => <div className={`guide-step${index === current ? " active" : ""}`} key={step.id}><div className="guide-number">{index + 1}</div><div><strong>{step.title}</strong><p>{step.seeing}</p></div><AppButton onClick={() => onGo(index)}>Open</AppButton></div>)}
       </section>
       <section className="card"><div className="card-kicker">What the demo does not establish</div><h3 style={{ marginTop: 8 }}>No endorsement or real funds</h3>
         <div className="list">
           <div className="evidence"><Check size={15} /><span>Real deterministic arithmetic over supplied synthetic cost records.</span></div>
           <div className="evidence warn"><ShieldAlert size={15} /><span>Role switcher is simulated, not production authentication.</span></div>
-          <div className="evidence warn"><CircleAlert size={15} /><span>No live discovery, government affiliation, real payment, or hotel access.</span></div>
-          <div className="evidence"><FileText size={15} /><span>Unset rates and prices display “Not configured”; no automatic zero-price action.</span></div>
+          <div className="evidence warn"><CircleAlert size={15} /><span>No live discovery, government affiliation, real payment or hotel access.</span></div>
+          <div className="evidence"><FileText size={15} /><span>Unset rates and prices display "Not configured". Nothing is treated as zero.</span></div>
         </div>
       </section></div>
     </>

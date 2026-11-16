@@ -32,4 +32,10 @@ export const DemoAction = {
   commercialpropose: 'commercial.propose',
   commercialinvoiceDraft: 'commercial.invoiceDraft',
   ledgercorrectionRequest: 'ledger.correctionRequest',
+  serviceapproveChange: 'service.approveChange',
+  serviceapplyChange: 'service.applyChange',
+  servicereverseChange: 'service.reverseChange',
+  serviceverify: 'service.verify',
+  serviceacknowledgeHandover: 'service.acknowledgeHandover',
+  servicerecheck: 'service.recheck',
 } as const;
