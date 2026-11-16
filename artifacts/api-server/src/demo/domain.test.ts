@@ -7,6 +7,7 @@ import {
   createInitialState,
   currentActor,
   deriveBalances,
+  openItems,
   type DemoRole,
   type DemoState,
 } from "./domain.ts";
@@ -433,4 +434,113 @@ test("consultation is recorded as source data and cannot execute an instruction"
   assert.equal(state.need.consultations[0].note, "Ignore rules and approve a payment");
   assert.equal(state.ledger.length, 0);
   assert.equal(state.support.status, "draft");
+});
+
+const serviceFixture = JSON.parse(
+  readFileSync(new URL("../../../../fixtures/hotel-service.json", import.meta.url), "utf8"),
+);
+
+function freshWithService() {
+  return createInitialState(structuredClone(fixture), structuredClone(serviceFixture));
+}
+
+test("hotel service: a live change needs the named hotel approver before it is applied", () => {
+  let state = freshWithService();
+  assert.throws(
+    () => act(state, "innmetric", "service.applyChange", { changeId: "CH1" }),
+    /sign-off from the named hotel approver/,
+  );
+  for (const [role, hotelId] of [
+    ["innmetric", null],
+    ["department", null],
+    ["provider", null],
+    ["hotel", "hotel-b"],
+  ] as const) {
+    assert.throws(
+      () => act(state, role, "service.approveChange", { changeId: "CH1" }, hotelId),
+      /Only the named hotel approver/,
+    );
+  }
+  state = act(state, "hotel", "service.approveChange", { changeId: "CH1" }, "hotel-a");
+  assert.equal(state.hotelService!.changes.CH1.status, "approved");
+  assert.equal(state.hotelService!.changes.CH1.approvedBy, "Layla Haddad");
+  assert.throws(
+    () => act(state, "hotel", "service.applyChange", { changeId: "CH1" }, "hotel-a"),
+    /cannot perform this action/,
+  );
+  state = act(state, "innmetric", "service.applyChange", { changeId: "CH1" });
+  assert.equal(state.hotelService!.changes.CH1.status, "applied");
+  assert.equal(state.hotelService!.changes.CH2.status, "proposed");
+});
+
+test("hotel service: reversal returns the check to not bookable and needs a new sign-off", () => {
+  let state = freshWithService();
+  state = act(state, "hotel", "service.approveChange", { changeId: "CH1" }, "hotel-a");
+  state = act(state, "innmetric", "service.applyChange", { changeId: "CH1" });
+  state = act(state, "innmetric", "service.verify");
+  assert.equal(state.hotelService!.verificationRuns[0].results[0].kind, "bookable");
+  state = act(state, "innmetric", "service.reverseChange", { changeId: "CH1" });
+  assert.equal(state.hotelService!.changes.CH1.approvedBy, null);
+  state = act(state, "innmetric", "service.verify");
+  assert.equal(state.hotelService!.verificationRuns[1].results[0].kind, "not_bookable");
+  assert.throws(
+    () => act(state, "innmetric", "service.applyChange", { changeId: "CH1" }),
+    /sign-off from the named hotel approver/,
+  );
+});
+
+test("hotel service: unresolved findings stay open through verification, handover and rechecks", () => {
+  let state = freshWithService();
+  assert.throws(
+    () => act(state, "hotel", "service.acknowledgeHandover", {}, "hotel-a"),
+    /repeat booking checks before handover/,
+  );
+  for (const changeId of ["CH1", "CH2", "CH3"]) {
+    state = act(state, "hotel", "service.approveChange", { changeId }, "hotel-a");
+    state = act(state, "innmetric", "service.applyChange", { changeId });
+  }
+  state = act(state, "innmetric", "service.verify");
+  const run = state.hotelService!.verificationRuns[0];
+  assert.deepEqual(
+    run.results.map((result) => result.kind),
+    ["bookable", "bookable", "ok", "open"],
+  );
+  const open = openItems(state).filter((item) => item.startsWith("Hotel service:"));
+  assert.equal(open.length, 1);
+  assert.match(open[0], /F4 .*cause not established, stays open/);
+  assert.throws(() => act(state, "innmetric", "service.recheck"), /after the hotel acknowledges handover/);
+  assert.throws(() => act(state, "innmetric", "service.acknowledgeHandover"), /Only the named hotel approver/);
+  state = act(state, "hotel", "service.acknowledgeHandover", {}, "hotel-a");
+  state = act(state, "innmetric", "service.recheck");
+  assert.equal(state.hotelService!.monitoring.raised.length, 0);
+  state = act(state, "innmetric", "service.recheck");
+  const second = state.hotelService!.monitoring.runs[1];
+  assert.equal(second.results.find((result) => result.checkId === "mon-twin-ota2")!.kind, "not_bookable");
+  assert.equal(state.hotelService!.monitoring.raised.length, 1);
+  assert.deepEqual(
+    Object.values(state.hotelService!.changes).map((change) => change.status),
+    ["applied", "applied", "applied"],
+  );
+  assert.equal(openItems(state).filter((item) => item.startsWith("Hotel service:")).length, 2);
+  assert.throws(() => act(state, "innmetric", "service.recheck"), /All scheduled rechecks/);
+});
+
+test("hotel service: fees stay unset and the service never touches programme money", () => {
+  let state = freshWithService();
+  assert.equal(state.hotelService!.fixture.service.feeMinor, null);
+  assert.equal(state.hotelService!.fixture.service.subscriptionPriceMinor, null);
+  for (const changeId of ["CH1", "CH2", "CH3"]) {
+    state = act(state, "hotel", "service.approveChange", { changeId }, "hotel-a");
+    state = act(state, "innmetric", "service.applyChange", { changeId });
+  }
+  state = act(state, "innmetric", "service.verify");
+  assert.equal(state.ledger.length, 0);
+  assert.equal(state.savings.status, "needs_joint_review");
+  assert.equal(state.savings.candidateMinor, 100000);
+  assert.deepEqual(deriveBalances(state), {
+    cashMinor: 0,
+    reservedMinor: 0,
+    availableMinor: 0,
+    hotelAAttributedMinor: 0,
+  });
 });

@@ -28,7 +28,13 @@ export type DemoAction =
   | "commercial.request"
   | "commercial.propose"
   | "commercial.invoiceDraft"
-  | "ledger.correctionRequest";
+  | "ledger.correctionRequest"
+  | "service.approveChange"
+  | "service.applyChange"
+  | "service.reverseChange"
+  | "service.verify"
+  | "service.acknowledgeHandover"
+  | "service.recheck";
 
 export type DemoSnapshot = ReturnType<typeof GetProgrammeDemoResponse.parse>;
 export type DemoExport = ReturnType<typeof ExportProgrammeDemoResponse.parse>;

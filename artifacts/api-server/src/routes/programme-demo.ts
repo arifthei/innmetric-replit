@@ -14,6 +14,7 @@ import {
 import {
   applyDemoAction,
   currentActor,
+  createHotelServiceState,
   createInitialState,
   deriveBalances,
   DemoDomainError,
@@ -43,10 +44,10 @@ function parseSessionHeader(request: Request, required: boolean) {
   return result.data;
 }
 
-async function readFixture() {
+async function readFixture(fileName = "programme-demo.json") {
   const fixturePaths = [
-    path.resolve(process.cwd(), "fixtures", "programme-demo.json"),
-    path.resolve(process.cwd(), "..", "..", "fixtures", "programme-demo.json"),
+    path.resolve(process.cwd(), "fixtures", fileName),
+    path.resolve(process.cwd(), "..", "..", "fixtures", fileName),
   ];
   for (const fixturePath of fixturePaths) {
     try {
@@ -55,6 +56,15 @@ async function readFixture() {
   }
   logger.error({ fixturePaths }, "Unable to read synthetic demo fixture");
   throw new Error("The synthetic programme fixture is unavailable.");
+}
+
+/** Sessions created before the hotel service story get its seed record on first use. */
+async function withHotelService(state: DemoState): Promise<DemoState> {
+  if (state.hotelService) return state;
+  return {
+    ...state,
+    hotelService: createHotelServiceState(await readFixture("hotel-service.json")),
+  };
 }
 
 function eventView(event: StoredEvent) {
@@ -83,7 +93,7 @@ async function ensureSession(sessionId: string) {
 
   if (!current) {
     const fixture = await readFixture();
-    const state = createInitialState(fixture);
+    const state = createInitialState(fixture, await readFixture("hotel-service.json"));
     await db
       .insert(programmeDemoSessions)
       .values({
@@ -133,7 +143,7 @@ async function getSnapshot(sessionId: string) {
     .where(eq(programmeDemoEvents.sessionId, sessionId))
     .orderBy(asc(programmeDemoEvents.sequence))
     .limit(1000);
-  const state = projectState(session.state as DemoState);
+  const state = projectState(await withHotelService(session.state as DemoState));
   const visibleEvents = projectEvents(state, events);
   return {
     sessionId,
@@ -156,6 +166,11 @@ function projectState(source: DemoState): DemoState {
     );
   }
   const role = state.role;
+  // The hotel service record is commercial. Only InnMetric and the served hotel can see it.
+  const servedHotelId = state.hotelService?.fixture.hotel.id;
+  if (!(role === "innmetric" || (role === "hotel" && state.hotelId === servedHotelId))) {
+    state.hotelService = null;
+  }
   const hotelId = role === "hotel" ? state.hotelId : role === "provider" ? "hotel-b" : null;
   const portfolio = role === "innmetric" || role === "department";
   const finance = portfolio;
@@ -266,7 +281,9 @@ function projectState(source: DemoState): DemoState {
 }
 
 function projectEvents(state: DemoState, events: StoredEvent[]) {
-  if (state.role === "innmetric" || state.role === "department") return events;
+  const isService = (event: StoredEvent) => event.action.startsWith("service.");
+  if (state.role === "innmetric") return events;
+  if (state.role === "department") return events.filter((event) => !isService(event));
   const hotelId = state.role === "provider" ? "hotel-b" : state.hotelId;
   const allowed = hotelId === "hotel-a"
     ? new Set(["hotel-a", "saving-A"])
@@ -280,6 +297,7 @@ function projectEvents(state: DemoState, events: StoredEvent[]) {
     if (state.role === "provider" && event.actorRole !== "provider" && event.action !== "delivery.mark") {
       return false;
     }
+    if (isService(event)) return state.role === "hotel" && hotelId === "hotel-a";
     return allowed.has(event.entityId);
   });
 }
@@ -345,7 +363,7 @@ router.post("/demo/actions", async (request, response) => {
         }
       }
 
-      const state = session.state as DemoState;
+      const state = await withHotelService(session.state as DemoState);
       const actor = currentActor(state);
       const eventId = randomUUID();
       const applied = applyDemoAction(state, action, actor, eventId);

@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "dataMode": "synthetic",
+  "currency": "AED",
+  "notice": "All hotels, people, channels, observations, totals and changes are invented. No live system was read or changed. No real guest, rate or account data is used.",
+  "hotel": {
+    "id": "hotel-a",
+    "name": "Demo Hotel A",
+    "profile": "Synthetic independent hotel in the GCC. It sells direct through its own website and booking engine and on two online travel agencies (OTA 1 and OTA 2).",
+    "approver": {
+      "name": "Layla Haddad",
+      "title": "Reservations and Revenue Manager, Demo Hotel A",
+      "note": "Fictional person"
+    }
+  },
+  "service": {
+    "stages": [
+      "Intake",
+      "Distribution Baseline Audit",
+      "Approved Repair Sprint",
+      "Verification and handover",
+      "Ongoing Distribution Control"
+    ],
+    "deliveredBy": "InnMetric founder (simulated operator)",
+    "feeMinor": null,
+    "subscriptionPriceMinor": null,
+    "boundaries": [
+      "InnMetric works across the hotel's existing website, PMS, channel manager, booking engine and OTA accounts. It does not replace any of them.",
+      "Rates, promotions and availability rules are the hotel's decisions. InnMetric does not make pricing decisions.",
+      "Every live change needs sign-off from the named hotel approver and carries a reversal step.",
+      "No ranking, booking volume or permanent fix is promised."
+    ]
+  },
+  "intake": {
+    "reportedBy": "Layla Haddad",
+    "report": "Guests tell us the Book now button for the Deluxe King room ends on an error page. Other rooms seem fine.",
+    "roomType": "Deluxe King",
+    "evidenceIds": ["A-route", "A-check-1", "A-check-2"],
+    "observations": [
+      { "id": "A-check-1", "text": "Deluxe King booking link from the hotel website returned an error page (HTTP 404)." },
+      { "id": "A-check-2", "text": "Repeat check four minutes later returned the same error page (HTTP 404)." },
+      { "id": "intake-twin", "text": "Standard Twin booking link from the same page opened the booking engine normally." }
+    ],
+    "systemsInScope": [
+      "Hotel website",
+      "Booking engine",
+      "Channel manager",
+      "PMS",
+      "OTA 1 account",
+      "OTA 2 account",
+      "Business listing"
+    ],
+    "accessNote": "Access is simulated. The demo holds no credentials and connects to no hotel system."
+  },
+  "audit": {
+    "match": [
+      { "label": "Room", "value": "Deluxe King" },
+      { "label": "Dates", "value": "10 to 12 December 2026, 2 nights" },
+      { "label": "Occupancy", "value": "2 adults" },
+      { "label": "Terms", "value": "Flexible rate, free cancellation until 2 days before arrival" },
+      { "label": "Taxes", "value": "Stay total including taxes and fees" },
+      { "label": "Currency", "value": "AED" },
+      { "label": "Promotions", "value": "No promotion or member rate applied" }
+    ],
+    "referenceTotalMinor": 120000,
+    "referenceNote": "Hotel's own rate plan total for the matched stay, from a synthetic hotel export.",
+    "rows": [
+      {
+        "channel": "Hotel website",
+        "bookable": false,
+        "displayedMinor": 120000,
+        "displayBasis": "Room page figure, taxes included",
+        "matchedTotalMinor": null,
+        "note": "Booking button ends on an error page, so the stay cannot be completed."
+      },
+      {
+        "channel": "Booking engine",
+        "bookable": false,
+        "displayedMinor": null,
+        "displayBasis": "No figure shown",
+        "matchedTotalMinor": null,
+        "note": "Deluxe King is listed as unavailable for these dates. Standard Twin is offered."
+      },
+      {
+        "channel": "OTA 1",
+        "bookable": true,
+        "displayedMinor": 115000,
+        "displayBasis": "Taxes and fees included",
+        "matchedTotalMinor": 115000,
+        "note": "AED 50.00 below the hotel's rate plan total on matched terms."
+      },
+      {
+        "channel": "OTA 2",
+        "bookable": true,
+        "displayedMinor": 100000,
+        "displayBasis": "Before taxes and fees",
+        "matchedTotalMinor": 120000,
+        "note": "AED 200.00 of taxes and fees are added at checkout. No difference once matched."
+      }
+    ],
+    "symptoms": [
+      { "id": "S1", "channel": "Hotel website", "text": "The Deluxe King booking button ends on an error page (HTTP 404). Observed twice.", "evidenceIds": ["A-check-1", "A-check-2"] },
+      { "id": "S2", "channel": "Booking engine", "text": "A search for the matched stay lists Deluxe King as unavailable while Standard Twin is offered.", "evidenceIds": [] },
+      { "id": "S3", "channel": "Business listing", "text": "The website button on the hotel's business listing opens the hotel's OTA 1 page, not the hotel website.", "evidenceIds": [] },
+      { "id": "S4", "channel": "OTA 1", "text": "The matched stay total on OTA 1 is AED 50.00 below the hotel's rate plan total.", "evidenceIds": [] },
+      { "id": "S5", "channel": "OTA 2", "text": "OTA 2 displays a figure AED 200.00 below the hotel's rate plan total.", "evidenceIds": [] }
+    ],
+    "causes": [
+      { "id": "C1", "symptomId": "S1", "status": "established", "text": "The button uses a room code that was retired in the booking engine.", "basis": "Website button address compared with the booking engine room list, together with the hotel." },
+      { "id": "C2", "symptomId": "S2", "status": "established", "text": "Deluxe King is not mapped between the channel manager and the booking engine, so no availability reaches the engine.", "basis": "Room mapping reviewed on screen with the hotel." },
+      { "id": "C3", "symptomId": "S3", "status": "established", "text": "The listing's website field holds an OTA address.", "basis": "Listing settings shown by the hotel." },
+      { "id": "C4", "symptomId": "S4", "status": "not_established", "text": "Not established. Possible explanations include a discount funded by the OTA or an older rate plan that is still mapped.", "basis": "A public price difference alone does not prove a fault or a revenue loss. The hotel has asked its OTA 1 contact." },
+      { "id": "C5", "symptomId": "S5", "status": "no_fault", "text": "No fault. The displayed figure excludes taxes and fees. On a matched basis the totals are equal.", "basis": "Checkout total compared on the same tax basis." }
+    ],
+    "findings": [
+      { "id": "F1", "title": "Direct booking link fails for Deluxe King", "symptomId": "S1", "causeId": "C1", "changeId": "CH1", "checkId": "chk-link", "initialStatus": "open" },
+      { "id": "F2", "title": "Deluxe King not offered in the booking engine", "symptomId": "S2", "causeId": "C2", "changeId": "CH2", "checkId": "chk-engine", "initialStatus": "open" },
+      { "id": "F3", "title": "Business listing sends guests to a reseller", "symptomId": "S3", "causeId": "C3", "changeId": "CH3", "checkId": "chk-listing", "initialStatus": "open" },
+      { "id": "F4", "title": "OTA 1 total is lower on matched terms", "symptomId": "S4", "causeId": "C4", "changeId": null, "checkId": "chk-ota1", "initialStatus": "unresolved" },
+      { "id": "F5", "title": "OTA 2 figure looks lower before taxes", "symptomId": "S5", "causeId": "C5", "changeId": null, "checkId": null, "initialStatus": "closed_no_difference" }
+    ]
+  },
+  "changes": [
+    {
+      "id": "CH1",
+      "findingId": "F1",
+      "system": "Hotel website",
+      "change": "Point the Deluxe King booking button to the current booking engine room code.",
+      "reversal": "Restore the previous button address from the saved copy."
+    },
+    {
+      "id": "CH2",
+      "findingId": "F2",
+      "system": "Channel manager",
+      "change": "Map Deluxe King to the booking engine room so that availability is sent.",
+      "reversal": "Remove the new mapping. The earlier configuration export is kept for reference."
+    },
+    {
+      "id": "CH3",
+      "findingId": "F3",
+      "system": "Business listing",
+      "change": "Replace the listing's website link with the hotel's own address.",
+      "reversal": "Put the previous link back."
+    }
+  ],
+  "noChangeProposed": [
+    { "findingId": "F4", "reason": "Cause not established. Rates and promotions are the hotel's decision, so no change is proposed." }
+  ],
+  "checks": [
+    {
+      "id": "chk-link",
+      "label": "Deluxe King booking link from the hotel website",
+      "channel": "Hotel website",
+      "verification": true,
+      "changeId": "CH1",
+      "before": { "kind": "not_bookable", "label": "Not bookable", "note": "Error page (HTTP 404)." },
+      "after": { "kind": "bookable", "label": "Bookable", "note": "Opens the booking page for Deluxe King." }
+    },
+    {
+      "id": "chk-engine",
+      "label": "Deluxe King, matched stay, in the booking engine",
+      "channel": "Booking engine",
+      "verification": true,
+      "changeId": "CH2",
+      "before": { "kind": "not_bookable", "label": "Not bookable", "note": "Listed as unavailable." },
+      "after": { "kind": "bookable", "label": "Bookable", "note": "Offered at the hotel's rate plan total of AED 1,200.00." }
+    },
+    {
+      "id": "chk-listing",
+      "label": "Website button on the business listing",
+      "channel": "Business listing",
+      "verification": true,
+      "changeId": "CH3",
+      "before": { "kind": "open", "label": "Opens OTA 1", "note": "Guests land on a reseller page." },
+      "after": { "kind": "ok", "label": "Opens hotel website", "note": "Guests land on the hotel's own site." }
+    },
+    {
+      "id": "chk-ota1",
+      "label": "OTA 1 total on matched terms",
+      "channel": "OTA 1",
+      "verification": true,
+      "changeId": null,
+      "fixed": { "kind": "open", "label": "Difference observed", "note": "AED 50.00 below the hotel's rate plan total. Cause not established." }
+    },
+    {
+      "id": "mon-twin-direct",
+      "label": "Standard Twin, matched stay, in the booking engine",
+      "channel": "Booking engine",
+      "verification": false,
+      "changeId": null,
+      "fixed": { "kind": "bookable", "label": "Bookable", "note": "Offered." }
+    },
+    {
+      "id": "mon-twin-ota2",
+      "label": "Standard Twin, matched stay, on OTA 2",
+      "channel": "OTA 2",
+      "verification": false,
+      "changeId": null,
+      "fixed": { "kind": "bookable", "label": "Bookable", "note": "Offered." }
+    }
+  ],
+  "rechecks": [
+    {
+      "id": "rc-1",
+      "label": "First scheduled recheck",
+      "when": "7 days after handover",
+      "scripted": []
+    },
+    {
+      "id": "rc-2",
+      "label": "Second scheduled recheck",
+      "when": "14 days after handover",
+      "scripted": [
+        {
+          "checkId": "mon-twin-ota2",
+          "result": { "kind": "not_bookable", "label": "Not bookable", "note": "No availability shown on OTA 2 while the booking engine offers the room. Cause not established." },
+          "raise": "Standard Twin is not bookable on OTA 2 for the matched stay. Raised to the hotel. No change made without approval."
+        }
+      ]
+    }
+  ],
+  "recheckNote": "Recheck intervals are illustrative demo settings agreed with the fictional approver. They are not a service timetable."
+}

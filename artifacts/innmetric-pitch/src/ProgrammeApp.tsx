@@ -17,6 +17,7 @@ import {
   RotateCcw,
   ShieldAlert,
   Wallet,
+  Wrench,
 } from "lucide-react";
 import {
   downloadDemoExport,
@@ -27,6 +28,7 @@ import {
   type DemoRole,
   type DemoSnapshot,
 } from "./lib/demo-api";
+import { HotelService } from "./HotelService";
 import { STEPS, Walkthrough, type Page, type PlayAction } from "./walkthrough";
 
 const BANNER = "Demonstration data. Not a live service or government programme.";
@@ -80,6 +82,7 @@ type DemoState = {
   outcome: any;
   commercial: { proposals: any[]; invoices: any[] };
   corrections: any[];
+  hotelService?: any;
 };
 
 type ActionRunner = (
@@ -89,6 +92,7 @@ type ActionRunner = (
 ) => Promise<void>;
 
 const PAGE_LABELS: Record<Page, string> = {
+  hotel: "Hotel service",
   overview: "Programme overview",
   discovery: "Discovery",
   case: "Hotel cases",
@@ -312,6 +316,7 @@ function App() {
     }
   };
 
+  const programmeStart = STEPS.findIndex((step) => step.track === "programme");
   const nav: { id: Page; label: string; icon: typeof Layers3 }[] = [
     { id: "overview", label: PAGE_LABELS.overview, icon: Layers3 },
     { id: "discovery", label: PAGE_LABELS.discovery, icon: Compass },
@@ -348,8 +353,16 @@ function App() {
           </div>
         </div>
         <div>
-          <div className="nav-label" style={{ padding: "0 10px 8px" }}>Workspace</div>
           <nav className="nav-list" aria-label="Main navigation">
+            <div className="nav-group">Hotel service</div>
+            <button
+              className={`nav-item ${page === "hotel" ? "active" : ""}`}
+              onClick={() => { setPage("hotel"); setMessage(""); }}
+              aria-current={page === "hotel" ? "page" : undefined}
+            >
+              <Wrench /><span>{PAGE_LABELS.hotel}</span>
+            </button>
+            <div className="nav-group">Proposed programme</div>
             {nav.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -360,6 +373,7 @@ function App() {
                 <Icon /><span>{label}</span>
               </button>
             ))}
+            <div className="nav-group">Demo</div>
             <button className={`nav-item ${page === "guide" ? "active" : ""}`} onClick={() => setPage("guide")}>
               <Activity /><span>{PAGE_LABELS.guide}</span>
             </button>
@@ -373,7 +387,7 @@ function App() {
 
       <main className="main-area">
         <header className="topbar">
-          <div className="crumb"><span>InnMetric</span><ArrowRight size={12} /><strong>{PAGE_LABELS[page]}</strong></div>
+          <div className="crumb"><span>{page === "hotel" || page === "guide" ? "InnMetric" : "Proposed programme"}</span><ArrowRight size={12} /><strong>{PAGE_LABELS[page]}</strong></div>
           <div className="top-status">
             <span className="pill amber">Synthetic data</span>
             <span className="pill teal">Server-persisted demo</span>
@@ -389,6 +403,16 @@ function App() {
             <div className={`notice ${message.toLowerCase().startsWith("blocked") || message.includes("cannot") || message.includes("required") ? "red" : "teal"}`} role="status" style={{ marginBottom: 18 }}>
               {message}
             </div>
+          )}
+          {page === "hotel" && (
+            <HotelService
+              service={state.hotelService}
+              role={state.role}
+              hotelId={state.hotelId}
+              busy={busy}
+              onAction={act}
+              onOpenProgramme={() => { setWalk((current) => ({ ...current, hidden: false })); goToStep(programmeStart); }}
+            />
           )}
           {page === "overview" && <Overview state={state} snapshot={snapshot} balances={balances} onNavigate={setPage} />}
           {page === "discovery" && <Discovery state={state} busy={busy} onAction={act} />}

@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, ArrowLeft, ArrowRight, Play, RotateCcw, X } fro
 import type { DemoAction, DemoRole } from "./lib/demo-api";
 
 export type Page =
+  | "hotel"
   | "overview"
   | "discovery"
   | "case"
@@ -52,6 +53,125 @@ const once = (done: (state: any) => boolean) => (state: any) => (done(state) ? 0
 const signed = (list: any[] | undefined, role: string, version: number) =>
   (list ?? []).some((item) => item.role === role && item.version === version);
 const CHECKS = { scope: true, timing: true, channelMix: true, costs: true };
+
+const changeIs = (id: string, ...statuses: string[]) => (state: any) =>
+  statuses.includes(state.hotelService?.changes?.[id]?.status);
+const CHANGE_IDS = ["CH1", "CH2", "CH3"];
+
+export const HOTEL_STEPS: Step[] = [
+  {
+    id: "hotel-intake",
+    track: "hotel",
+    title: "Intake",
+    seeing: "Demo Hotel A reports that its direct booking link fails for one room type, Deluxe King.",
+    page: "hotel",
+    role: "innmetric",
+    anchor: "hs-intake",
+    notes: [
+      "The hotel is synthetic: an independent GCC property selling direct and on two OTAs.",
+      "Two checks returned the same error page. Standard Twin from the same page works.",
+      "InnMetric works across the hotel's existing systems and replaces none of them. The service fee is not configured in this demo.",
+    ],
+  },
+  {
+    id: "hotel-audit",
+    track: "hotel",
+    title: "Distribution Baseline Audit",
+    seeing: "The same room, dates, occupancy, terms, taxes and currency compared across the website, booking engine and two OTAs.",
+    page: "hotel",
+    role: "innmetric",
+    anchor: "hs-audit",
+    notes: [
+      "Match first, then compare. OTA 2 looks AED 200 cheaper only because it shows the figure before taxes. Matched, there is no difference.",
+      "Symptoms and causes are separate lists. Three causes are established with the hotel.",
+      "OTA 1 is AED 50 lower on matched terms. The cause is not established, so the finding stays open. A price difference alone proves neither a fault nor a loss.",
+    ],
+  },
+  {
+    id: "hotel-signoff",
+    track: "hotel",
+    title: "The hotel signs off each change",
+    seeing: "Three proposed changes wait for the named hotel approver. Each one shows its reversal step.",
+    page: "hotel",
+    role: "hotel",
+    hotelId: "hotel-a",
+    anchor: "hs-sprint",
+    notes: [
+      "You are now the hotel's approver, Layla Haddad (fictional). Sign off CH1, CH2 and CH3 one at a time.",
+      "Nothing is proposed for the OTA 1 price finding. Rates and promotions are the hotel's decision.",
+      "InnMetric has no sign-off button of its own.",
+    ],
+    play: CHANGE_IDS.map((changeId) => ({
+      role: "hotel" as const,
+      hotelId: "hotel-a",
+      action: "service.approveChange" as const,
+      payload: { changeId },
+      remaining: once(changeIs(changeId, "approved", "applied")),
+    })),
+  },
+  {
+    id: "hotel-sprint",
+    track: "hotel",
+    title: "Approved Repair Sprint",
+    seeing: "InnMetric applies only the signed-off changes. Any of them can be reversed with its documented step.",
+    page: "hotel",
+    role: "innmetric",
+    anchor: "hs-sprint",
+    notes: [
+      "Apply is disabled until the approver has signed. The server enforces this, not only the button.",
+      "Changes are simulated. No live website, channel manager or listing is touched.",
+      "Optional: reverse one change to show that it then needs a new sign-off.",
+    ],
+    play: CHANGE_IDS.map((changeId) => ({
+      role: "innmetric" as const,
+      action: "service.applyChange" as const,
+      payload: { changeId },
+      remaining: once(changeIs(changeId, "applied")),
+    })),
+  },
+  {
+    id: "hotel-verify",
+    track: "hotel",
+    title: "Verification and handover",
+    seeing: "Repeat booking checks after the changes, the items still open and the rechecks agreed at handover.",
+    page: "hotel",
+    role: "innmetric",
+    anchor: "hs-verify",
+    notes: [
+      "Run the repeat checks. The Deluxe King link and booking engine search now read Bookable.",
+      "The OTA 1 difference is still observed and stays open. Handover lists it instead of hiding it.",
+      "The hotel approver acknowledges handover. Recheck intervals are illustrative, not a service timetable.",
+    ],
+    play: [
+      {
+        role: "innmetric",
+        action: "service.verify",
+        remaining: (s) => {
+          const results = s.hotelService?.verificationRuns?.at(-1)?.results ?? [];
+          return results.length && results.slice(0, 3).every((item: any) => item.kind === "bookable" || item.kind === "ok") ? 0 : 1;
+        },
+      },
+      { role: "hotel", hotelId: "hotel-a", action: "service.acknowledgeHandover", remaining: once((s) => s.hotelService?.handover?.acknowledged) },
+    ],
+  },
+  {
+    id: "hotel-control",
+    track: "hotel",
+    title: "Ongoing Distribution Control",
+    seeing: "A small monitoring view with scheduled rechecks. Not bookable is shown in kaki.",
+    page: "hotel",
+    role: "innmetric",
+    anchor: "hs-control",
+    notes: [
+      "Run the two scheduled rechecks. The second finds Standard Twin not bookable on OTA 2.",
+      "Monitoring reports and raises the item to the hotel. It changes nothing without approval and promises no permanent fix.",
+      "The subscription price is not configured. Then follow the link at the bottom to the proposed programme.",
+    ],
+    play: [
+      { role: "innmetric", action: "service.recheck", remaining: (s) => Math.max(0, 2 - (s.hotelService?.monitoring?.runs?.length ?? 0)) },
+    ],
+  },
+];
 
 export const PROGRAMME_STEPS: Step[] = [
   {
@@ -158,7 +278,7 @@ export const PROGRAMME_STEPS: Step[] = [
   },
 ];
 
-export const STEPS: Step[] = [...PROGRAMME_STEPS];
+export const STEPS: Step[] = [...HOTEL_STEPS, ...PROGRAMME_STEPS];
 
 export function Walkthrough({
   index,

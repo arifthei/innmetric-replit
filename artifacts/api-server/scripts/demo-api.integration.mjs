@@ -176,4 +176,40 @@ assert.equal(exported.body.state.reservations[0].sourceHotelId, "hotel-a");
 assert.equal(exported.body.state.reservations[0].beneficiaryHotelId, "hotel-b");
 assert.ok(exported.body.fixture.evidence.some((item) => item.id === "A-route"));
 
-console.log("API integration passed: isolated sessions, scoped roles, approval gates, ledger, replay, delivery, outcome and export.");
+// Hotel service story: commercial record, visible only to InnMetric and the served hotel.
+state = await act("role.switch", { role: "innmetric" });
+assert.equal(state.state.hotelService.fixture.hotel.id, "hotel-a");
+assert.equal(state.state.hotelService.fixture.service.feeMinor, null);
+await rejected("service.applyChange", { changeId: "CH1" }, 409);
+await rejected("service.approveChange", { changeId: "CH1" }, 403);
+state = await act("role.switch", { role: "department" });
+assert.equal(state.state.hotelService, null);
+assert.ok(!state.events.some((event) => event.action.startsWith("service.")));
+await rejected("service.approveChange", { changeId: "CH1" }, 403);
+state = await act("role.switch", { role: "hotel", hotelId: "hotel-b" });
+assert.equal(state.state.hotelService, null);
+await rejected("service.approveChange", { changeId: "CH1" }, 403);
+state = await act("role.switch", { role: "hotel", hotelId: "hotel-a" });
+for (const changeId of ["CH1", "CH2", "CH3"]) state = await act("service.approveChange", { changeId });
+assert.equal(state.state.hotelService.changes.CH1.approvedBy, "Layla Haddad");
+await rejected("service.acknowledgeHandover", {}, 409);
+state = await act("role.switch", { role: "innmetric" });
+for (const changeId of ["CH1", "CH2", "CH3"]) state = await act("service.applyChange", { changeId });
+state = await act("service.verify");
+assert.deepEqual(
+  state.state.hotelService.verificationRuns[0].results.map((result) => result.kind),
+  ["bookable", "bookable", "ok", "open"],
+);
+await rejected("service.recheck", {}, 409);
+state = await act("role.switch", { role: "hotel", hotelId: "hotel-a" });
+state = await act("service.acknowledgeHandover");
+state = await act("role.switch", { role: "innmetric" });
+state = await act("service.recheck");
+state = await act("service.recheck");
+assert.equal(state.state.hotelService.monitoring.raised.length, 1);
+await rejected("service.recheck", {}, 409);
+const afterService = await request("/demo/export", sessionId);
+assert.equal(afterService.body.balances.cashMinor, 80000);
+assert.ok(afterService.body.openItems.some((item) => item.includes("F4") && item.includes("stays open")));
+
+console.log("API integration passed: isolated sessions, scoped roles, approval gates, ledger, replay, delivery, outcome, export and the hotel service story.");

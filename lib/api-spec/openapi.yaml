@@ -134,6 +134,12 @@ components:
         - commercial.propose
         - commercial.invoiceDraft
         - ledger.correctionRequest
+        - service.approveChange
+        - service.applyChange
+        - service.reverseChange
+        - service.verify
+        - service.acknowledgeHandover
+        - service.recheck
     DemoActionRequest:
       type: object
       additionalProperties: false

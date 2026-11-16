@@ -57,7 +57,7 @@ export const applyProgrammeDemoActionBodyIdempotencyKeyMax = 120;
 
 
 export const ApplyProgrammeDemoActionBody = zod.object({
-  "action": zod.enum(['role.switch', 'discovery.run', 'need.confirm', 'consultation.add', 'savings.edit', 'savings.approve', 'collection.set', 'collection.approve', 'collection.post', 'allocation.approve', 'support.approve', 'support.edit', 'support.reserve', 'support.pay', 'support.directPayment', 'quote.submit', 'delivery.mark', 'outcome.confirm', 'commercial.request', 'commercial.propose', 'commercial.invoiceDraft', 'ledger.correctionRequest']),
+  "action": zod.enum(['role.switch', 'discovery.run', 'need.confirm', 'consultation.add', 'savings.edit', 'savings.approve', 'collection.set', 'collection.approve', 'collection.post', 'allocation.approve', 'support.approve', 'support.edit', 'support.reserve', 'support.pay', 'support.directPayment', 'quote.submit', 'delivery.mark', 'outcome.confirm', 'commercial.request', 'commercial.propose', 'commercial.invoiceDraft', 'ledger.correctionRequest', 'service.approveChange', 'service.applyChange', 'service.reverseChange', 'service.verify', 'service.acknowledgeHandover', 'service.recheck']),
   "payload": zod.record(zod.string(), zod.unknown()),
   "idempotencyKey": zod.string().max(applyProgrammeDemoActionBodyIdempotencyKeyMax).optional()
 })
@@ -111,3 +111,5 @@ export const ExportProgrammeDemoResponse = zod.object({
 })),
   "openItems": zod.array(zod.string())
 })
+
+

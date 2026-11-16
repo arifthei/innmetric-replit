@@ -173,6 +173,37 @@ export type DemoState = {
     status: "awaiting_review";
     financialEffectMinor: 0;
   }>;
+  /** Null when the session has no service fixture or the simulated role may not see it. */
+  hotelService?: HotelServiceState | null;
+};
+
+export type ServiceResult = {
+  checkId: string;
+  kind: "bookable" | "not_bookable" | "open" | "ok";
+  label: string;
+  note: string;
+};
+
+/** Founder-delivered hotel service record. Commercial, separate from the proposed programme. */
+export type HotelServiceState = {
+  fixture: Record<string, any>;
+  changes: Record<
+    string,
+    {
+      status: "proposed" | "approved" | "applied" | "reversed";
+      approvedBy: string | null;
+    }
+  >;
+  verificationRuns: Array<{ run: number; results: ServiceResult[] }>;
+  handover: {
+    acknowledged: boolean;
+    acknowledgedBy: string | null;
+    afterRun: number | null;
+  };
+  monitoring: {
+    runs: Array<{ recheckId: string; label: string; when: string; results: ServiceResult[] }>;
+    raised: Array<{ id: string; recheckId: string; checkId: string; text: string; status: "open" }>;
+  };
 };
 
 export type DemoAction = {
@@ -256,7 +287,70 @@ export function calculateCostComparison(
   };
 }
 
-export function createInitialState(fixture: Record<string, any>): DemoState {
+export function createHotelServiceState(
+  serviceFixture: Record<string, any>,
+): HotelServiceState {
+  return {
+    fixture: serviceFixture,
+    changes: Object.fromEntries(
+      serviceFixture.changes.map((change: Record<string, any>) => [
+        change.id,
+        { status: "proposed", approvedBy: null },
+      ]),
+    ),
+    verificationRuns: [],
+    handover: { acknowledged: false, acknowledgedBy: null, afterRun: null },
+    monitoring: { runs: [], raised: [] },
+  };
+}
+
+/** Result of one booking or link check, derived only from which approved changes are applied. */
+export function evaluateServiceCheck(
+  service: HotelServiceState,
+  check: Record<string, any>,
+): ServiceResult {
+  const outcome = check.fixed
+    ? check.fixed
+    : service.changes[check.changeId]?.status === "applied"
+      ? check.after
+      : check.before;
+  return { checkId: check.id, kind: outcome.kind, label: outcome.label, note: outcome.note };
+}
+
+/** Findings and raised items that are still open. Unresolved findings are never closed automatically. */
+export function serviceOpenItems(service: HotelServiceState): string[] {
+  const items: string[] = [];
+  for (const finding of service.fixture.audit.findings as Array<Record<string, any>>) {
+    if (finding.initialStatus === "closed_no_difference") continue;
+    if (finding.initialStatus === "unresolved") {
+      items.push(`${finding.id} ${finding.title}: cause not established, stays open.`);
+      continue;
+    }
+    const status = service.changes[finding.changeId]?.status;
+    const latest = service.verificationRuns.at(-1);
+    const verified =
+      status === "applied" &&
+      latest?.results.some(
+        (result) =>
+          result.checkId === finding.checkId &&
+          (result.kind === "bookable" || result.kind === "ok"),
+      );
+    if (!verified) {
+      items.push(
+        `${finding.id} ${finding.title}: ${
+          status === "applied" ? "change applied, repeat check not yet run" : `change ${status ?? "proposed"}`
+        }.`,
+      );
+    }
+  }
+  for (const raised of service.monitoring.raised) items.push(raised.text);
+  return items;
+}
+
+export function createInitialState(
+  fixture: Record<string, any>,
+  serviceFixture?: Record<string, any>,
+): DemoState {
   const comparison = fixture.costComparisons[0];
   const costs = calculateCostComparison(
     fixture.evidence,
@@ -347,6 +441,7 @@ export function createInitialState(fixture: Record<string, any>): DemoState {
     },
     commercial: { proposals: [], invoices: [] },
     corrections: [],
+    hotelService: serviceFixture ? createHotelServiceState(serviceFixture) : null,
   };
 }
 
@@ -425,6 +520,11 @@ export function openItems(state: DemoState): string[] {
   if (state.corrections.some((correction) => correction.status === "awaiting_review")) {
     items.push("A linked ledger correction request is awaiting review.");
   }
+  if (state.hotelService) {
+    for (const item of serviceOpenItems(state.hotelService)) {
+      items.push(`Hotel service: ${item}`);
+    }
+  }
   return items;
 }
 
@@ -446,6 +546,28 @@ function requireRole(state: DemoState, ...roles: DemoRole[]) {
   if (!roles.includes(state.role)) {
     fail(`Role ${state.role} cannot perform this action.`, 403);
   }
+}
+
+function requireService(state: DemoState): HotelServiceState {
+  if (!state.hotelService) {
+    fail("The hotel service record is not available in this session.", 409);
+  }
+  return state.hotelService;
+}
+
+function requireServiceApprover(state: DemoState, service: HotelServiceState) {
+  if (state.role !== "hotel" || state.hotelId !== service.fixture.hotel.id) {
+    fail("Only the named hotel approver can sign off this step.", 403);
+  }
+}
+
+function serviceChange(service: HotelServiceState, changeId: unknown) {
+  const definition = (service.fixture.changes as Array<Record<string, any>>).find(
+    (item) => item.id === changeId,
+  );
+  const record = typeof changeId === "string" ? service.changes[changeId] : undefined;
+  if (!definition || !record) fail("Choose a change listed in the repair sprint.", 404);
+  return { definition, record };
 }
 
 function evidenceById(state: DemoState, id: string) {
@@ -703,7 +825,7 @@ export function applyDemoAction(
     case "consultation.add": {
       requireRole(state, "innmetric", "department", "hotel");
       const note = String(payload.note ?? "").trim();
-      if (!note || note.length > 500) fail("Consultation note must be 1–500 characters.");
+      if (!note || note.length > 500) fail("Consultation note must be 1 to 500 characters.");
       const referenced = Array.isArray(payload.evidenceIds)
         ? payload.evidenceIds.map(String)
         : [];
@@ -1135,7 +1257,7 @@ export function applyDemoAction(
       }
       const amount = asPositiveMinor(payload.amountMinor, "Provider quote");
       const scope = String(payload.scope ?? "").trim();
-      if (!scope || scope.length > 500) fail("Quote scope must be 1–500 characters.");
+      if (!scope || scope.length > 500) fail("Quote scope must be 1 to 500 characters.");
       previousStatus = `quote_version_${state.support.quoteVersion}`;
       state.support.quoteVersion += 1;
       state.support.quoteMinor = amount;
@@ -1159,7 +1281,7 @@ export function applyDemoAction(
         fail("Verified delivery is already closed.", 409);
       }
       const note = String(payload.note ?? "Synthetic provider delivery recorded.").trim();
-      if (!note || note.length > 500) fail("Delivery note must be 1–500 characters.");
+      if (!note || note.length > 500) fail("Delivery note must be 1 to 500 characters.");
       previousStatus = state.delivery.status;
       state.delivery.status = "delivered";
       state.delivery.version += 1;
@@ -1313,7 +1435,7 @@ export function applyDemoAction(
       }
       const reasonText = String(payload.reason ?? "").trim();
       if (!reasonText || reasonText.length > 500) {
-        fail("Correction reason must be 1–500 characters.");
+        fail("Correction reason must be 1 to 500 characters.");
       }
       state.corrections.push({
         id: eventId,
@@ -1326,6 +1448,124 @@ export function applyDemoAction(
       entityId = originalEntryId;
       newStatus = "correction_requested";
       reason = "Linked correction request appended; the posted transaction and balance are unchanged.";
+      break;
+    }
+    case "service.approveChange": {
+      const service = requireService(state);
+      requireServiceApprover(state, service);
+      const { definition, record } = serviceChange(service, payload.changeId);
+      if (record.status !== "proposed" && record.status !== "reversed") {
+        fail("This change is already signed off.", 409);
+      }
+      previousStatus = record.status;
+      record.status = "approved";
+      record.approvedBy = String(service.fixture.hotel.approver.name);
+      entityId = `hotel-service:${definition.id}`;
+      newStatus = "approved";
+      reason = `Named hotel approver signed off one live change in ${definition.system}. Nothing is applied yet.`;
+      break;
+    }
+    case "service.applyChange": {
+      requireRole(state, "innmetric");
+      const service = requireService(state);
+      const { definition, record } = serviceChange(service, payload.changeId);
+      if (record.status !== "approved") {
+        fail("A live change needs sign-off from the named hotel approver before it is applied.", 409);
+      }
+      previousStatus = record.status;
+      record.status = "applied";
+      entityId = `hotel-service:${definition.id}`;
+      newStatus = "applied";
+      reason = `Simulated change recorded in ${definition.system} under hotel sign-off. No live system was changed.`;
+      break;
+    }
+    case "service.reverseChange": {
+      requireRole(state, "innmetric");
+      const service = requireService(state);
+      const { definition, record } = serviceChange(service, payload.changeId);
+      if (record.status !== "applied") {
+        fail("Only an applied change can be reversed.", 409);
+      }
+      previousStatus = record.status;
+      record.status = "reversed";
+      record.approvedBy = null;
+      entityId = `hotel-service:${definition.id}`;
+      newStatus = "reversed";
+      reason = `Simulated reversal using the documented step: ${definition.reversal} A new sign-off is needed to apply it again.`;
+      break;
+    }
+    case "service.verify": {
+      requireRole(state, "innmetric");
+      const service = requireService(state);
+      if (service.verificationRuns.length >= 20) {
+        fail("This synthetic session reached its limit of repeat checks.", 409);
+      }
+      const results = (service.fixture.checks as Array<Record<string, any>>)
+        .filter((check) => check.verification)
+        .map((check) => evaluateServiceCheck(service, check));
+      const run = service.verificationRuns.length + 1;
+      service.verificationRuns.push({ run, results });
+      const open = results.filter(
+        (result) => result.kind === "not_bookable" || result.kind === "open",
+      ).length;
+      entityId = "hotel-service:verification";
+      newStatus = open ? "open_items_remain" : "checks_passed";
+      reason = `Repeat check ${run} recorded from synthetic observations. ${open} of ${results.length} checks remain open.`;
+      break;
+    }
+    case "service.acknowledgeHandover": {
+      const service = requireService(state);
+      requireServiceApprover(state, service);
+      if (service.verificationRuns.length === 0) {
+        fail("Run the repeat booking checks before handover.", 409);
+      }
+      if (service.handover.acknowledged) fail("Handover is already acknowledged.", 409);
+      previousStatus = "awaiting_handover";
+      service.handover = {
+        acknowledged: true,
+        acknowledgedBy: String(service.fixture.hotel.approver.name),
+        afterRun: service.verificationRuns.length,
+      };
+      entityId = "hotel-service:handover";
+      newStatus = "handover_acknowledged";
+      reason = `Hotel approver acknowledged handover with ${serviceOpenItems(service).length} open item(s) listed. Open items stay open.`;
+      break;
+    }
+    case "service.recheck": {
+      requireRole(state, "innmetric");
+      const service = requireService(state);
+      if (!service.handover.acknowledged) {
+        fail("Scheduled rechecks start after the hotel acknowledges handover.", 409);
+      }
+      const schedule = service.fixture.rechecks as Array<Record<string, any>>;
+      const next = schedule[service.monitoring.runs.length];
+      if (!next) fail("All scheduled rechecks in the synthetic fixture have run.", 409);
+      const results = (service.fixture.checks as Array<Record<string, any>>).map((check) => {
+        const scripted = (next.scripted as Array<Record<string, any>>).find(
+          (item) => item.checkId === check.id,
+        );
+        return scripted
+          ? { checkId: check.id, ...scripted.result }
+          : evaluateServiceCheck(service, check);
+      });
+      service.monitoring.runs.push({
+        recheckId: next.id,
+        label: next.label,
+        when: next.when,
+        results,
+      });
+      for (const scripted of next.scripted as Array<Record<string, any>>) {
+        service.monitoring.raised.push({
+          id: `${next.id}:${scripted.checkId}`,
+          recheckId: next.id,
+          checkId: scripted.checkId,
+          text: scripted.raise,
+          status: "open",
+        });
+      }
+      entityId = `hotel-service:${next.id}`;
+      newStatus = next.scripted.length ? "raised_to_hotel" : "no_new_items";
+      reason = `${next.label} recorded from synthetic observations. Monitoring reports only. It changes nothing without hotel approval.`;
       break;
     }
     default:

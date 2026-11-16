@@ -45,6 +45,12 @@ export const DemoAction = {
   commercialpropose: 'commercial.propose',
   commercialinvoiceDraft: 'commercial.invoiceDraft',
   ledgercorrectionRequest: 'ledger.correctionRequest',
+  serviceapproveChange: 'service.approveChange',
+  serviceapplyChange: 'service.applyChange',
+  servicereverseChange: 'service.reverseChange',
+  serviceverify: 'service.verify',
+  serviceacknowledgeHandover: 'service.acknowledgeHandover',
+  servicerecheck: 'service.recheck',
 } as const;
 
 export type DemoActionRequestPayload = { [key: string]: unknown };
@@ -106,3 +112,4 @@ export type DemoSessionParameter = string;
  * Opaque per-tab demo session identifier; not production authentication
  */
 export type DemoSessionRequiredParameter = string;
+

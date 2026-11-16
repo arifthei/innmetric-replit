@@ -273,6 +273,38 @@
   .btn.kaki { @apply border-amber-line bg-card text-kaki; }
   .btn.kaki:hover:not(:disabled) { @apply bg-amber-soft; }
 
+  /* Hotel service story */
+  .stage-strip { @apply mb-6 grid grid-cols-5 gap-2; }
+  .stage { @apply flex items-start gap-2 rounded-lg border border-card-border bg-card px-3 py-2.5 text-[12px] leading-snug text-ink no-underline transition-colors hover:border-teal-line hover:bg-wash/50; }
+  .stage b { @apply block font-semibold; }
+  .stage small { @apply block text-[11px] text-muted-foreground; }
+  .stage-n { @apply grid size-5 flex-none place-items-center rounded-[4px] bg-press text-[11px] font-semibold text-paper; }
+  .hs-section { @apply mt-9 scroll-mt-[60px] border-t border-border pt-5; }
+  .hs-section > h2 { @apply mb-3 text-[20px]; }
+  .hs-kicker { @apply mb-1 text-[11px] font-semibold uppercase tracking-[.08em] text-press; }
+  .hs-quote { @apply my-2 border-l-2 border-asagi pl-3 text-[15px] leading-relaxed text-ink; }
+  .hs-list { @apply my-2 grid list-disc gap-1.5 pl-4 text-[13px] leading-snug; }
+  .hs-item { @apply grid grid-cols-[28px_minmax(0,1fr)] gap-2 border-b border-border py-2.5 text-[13px] leading-snug last:border-b-0; }
+  .hs-id { @apply text-[12px] font-semibold tabular-nums text-muted-foreground; }
+  .hs-finding { @apply items-center; }
+  .chip-row { @apply mt-2 flex flex-wrap gap-1.5; }
+  .match-grid { @apply m-0 mt-2 grid grid-cols-4 gap-x-4 gap-y-2.5; }
+  .match-grid dt { @apply text-[11px] font-semibold uppercase tracking-[.06em] text-muted-foreground; }
+  .match-grid dd { @apply m-0 text-[13px] font-medium leading-snug; }
+  .table.hs-table th:not(:first-child), .table.hs-table td { @apply text-left; }
+  .table.hs-table td.num { @apply whitespace-nowrap; }
+  .status { @apply inline-flex items-center whitespace-nowrap rounded-[5px] border px-2 py-0.5 text-[11px] font-semibold leading-5; }
+  .status.bookable, .status.ok { @apply border-teal-line bg-wash text-press; }
+  .status.not_bookable { @apply border-kaki bg-kaki text-paper; }
+  .status.open { @apply border-kaki bg-card text-kaki; }
+  .status.neutral { @apply border-border bg-stone-soft text-stone-ink; }
+  .change-card .card-title { @apply mb-2.5; }
+  .change-foot { @apply mt-3 flex flex-wrap items-center justify-between gap-2.5; }
+  .check-row { @apply flex items-center justify-between gap-3 border-b border-border py-2.5 text-[13px] leading-snug last:border-b-0; }
+  .programme-link { @apply mt-4 flex items-center justify-between gap-4 border-teal-line bg-wash; }
+  .programme-link .btn { @apply flex-none whitespace-nowrap; }
+  .nav-group { @apply mt-3 px-2.5 pb-1.5 text-[11px] font-semibold uppercase tracking-[.08em] text-muted-foreground first:mt-0; }
+
   /* Loading */
   .loading-shell { @apply grid min-h-0 flex-1 place-content-center justify-items-center gap-3 p-6 text-center text-stone-ink; }
   .loading-shell h1 { @apply m-0 text-ink; }
@@ -296,6 +328,8 @@
 }
 
 @media (max-width: 900px) {
+  .stage-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .match-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .app-shell { grid-template-columns: 216px minmax(0, 1fr); }
   .page { padding: 28px 24px 56px; }
   .topbar { padding: 0 24px; }
@@ -334,6 +368,11 @@
   .queue-item { grid-template-columns: 36px minmax(0, 1fr); }
   .queue-item > .pill, .queue-item > .btn, .queue-item > .small { grid-column: 2; justify-self: start; }
   .guide-layout, .journey-panel { grid-template-columns: 1fr; }
+  .stage-strip { grid-template-columns: 1fr; }
+  .programme-link, .card-title { flex-direction: column; align-items: flex-start; }
+  .check-row, .hs-finding { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .nav-group { display: none; }
+  .table.hs-table { min-width: 640px; }
   .table-wrap { overflow: auto; }
   .table { min-width: 560px; }
 }
