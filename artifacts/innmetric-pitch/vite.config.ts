@@ -72,6 +72,10 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    // Outside Replit there is no shared preview router, so forward /api to the local API server.
+    ...(process.env.REPL_ID === undefined
+      ? { proxy: { '/api': `http://localhost:${process.env.API_PORT ?? '8080'}` } }
+      : {}),
   },
   preview: {
     port,

@@ -93,7 +93,7 @@ PORT=8080 pnpm --filter @workspace/api-server run dev
 PORT=23425 BASE_PATH=/innmetric-pitch/ pnpm --filter @workspace/innmetric-pitch run dev
 ```
 
-**Routing requirement:** the frontend calls `/api` on its own origin. The configured workspace preview routes both services together. Outside that environment, configure a reverse proxy that routes `/api` to port `8080` and `/innmetric-pitch/` to port `23425` (including Vite WebSocket traffic). Opening the Vite port directly without API routing is not a complete local setup.
+**Routing:** the frontend calls `/api` on its own origin. In the configured workspace preview both services are routed together. Outside Replit the Vite dev server forwards `/api` to the local API on port `8080` (set `API_PORT` to change it), so open `http://localhost:23425/innmetric-pitch/` directly.
 
 The role selector and per-tab session identifier are demonstration controls, **not production authentication**.
 
