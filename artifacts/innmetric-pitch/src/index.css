@@ -273,6 +273,8 @@
   .btn.kaki { @apply border-amber-line bg-card text-kaki; }
   .btn.kaki:hover:not(:disabled) { @apply bg-amber-soft; }
 
+  .proposal-tag { @apply mb-5 rounded-md border border-teal-line bg-wash px-3.5 py-2.5 text-[13px] leading-relaxed text-ink; }
+
   /* Hotel service story */
   .stage-strip { @apply mb-6 grid grid-cols-5 gap-2; }
   .stage { @apply flex items-start gap-2 rounded-lg border border-card-border bg-card px-3 py-2.5 text-[12px] leading-snug text-ink no-underline transition-colors hover:border-teal-line hover:bg-wash/50; }

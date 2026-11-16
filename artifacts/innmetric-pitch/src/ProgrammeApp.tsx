@@ -316,6 +316,7 @@ function App() {
     }
   };
 
+  const isProgrammePage = ["overview", "discovery", "case", "support", "funds"].includes(page);
   const programmeStart = STEPS.findIndex((step) => step.track === "programme");
   const nav: { id: Page; label: string; icon: typeof Layers3 }[] = [
     { id: "overview", label: PAGE_LABELS.overview, icon: Layers3 },
@@ -387,11 +388,12 @@ function App() {
 
       <main className="main-area">
         <header className="topbar">
-          <div className="crumb"><span>{page === "hotel" || page === "guide" ? "InnMetric" : "Proposed programme"}</span><ArrowRight size={12} /><strong>{PAGE_LABELS[page]}</strong></div>
+          <div className="crumb"><span>{isProgrammePage ? "Proposed programme" : "InnMetric"}</span><ArrowRight size={12} /><strong>{PAGE_LABELS[page]}</strong></div>
           <div className="top-status">
             <span className="pill amber">Synthetic data</span>
             <span className="pill teal">Server-persisted demo</span>
             <span className="pill neutral">Simulated roles and payments</span>
+            {isProgrammePage && <span className="pill neutral">Proposed programme</span>}
             {walk.hidden && <AppButton onClick={() => setWalk((current) => ({ ...current, hidden: false }))}><Activity size={14} /> Walkthrough</AppButton>}
             <AppButton onClick={() => void exportSession()} disabled={busy}><Download size={14} /> Export</AppButton>
           </div>
@@ -402,6 +404,11 @@ function App() {
           {message && (
             <div className={`notice ${message.toLowerCase().startsWith("blocked") || message.includes("cannot") || message.includes("required") ? "red" : "teal"}`} role="status" style={{ marginBottom: 18 }}>
               {message}
+            </div>
+          )}
+          {isProgrammePage && (
+            <div className="proposal-tag" data-testid="proposal-tag">
+              <b>Proposed programme.</b> A proposal for discussion with a tourism department. Not adopted, not a government scheme. The department would hold the pool. InnMetric never holds it.
             </div>
           )}
           {page === "hotel" && (
@@ -510,7 +517,7 @@ function Overview({
   return (
     <>
       <PageHead
-        eyebrow="Proposed tourism support programme"
+        eyebrow="Proposed programme · overview"
         title="From evidence to accountable service."
         text="One persistent synthetic journey links discovery, hotel confirmation, joint review, department-controlled support, provider delivery and outcome confirmation."
         action={<AppButton primary onClick={() => onNavigate("discovery")}><Compass size={15} /> Continue journey</AppButton>}
@@ -587,7 +594,7 @@ function Discovery({ state, busy, onAction }: { state: DemoState; busy: boolean;
   return (
     <>
       <PageHead
-        eyebrow="Analysis of synthetic evidence"
+        eyebrow="Proposed programme · analysis of synthetic evidence"
         title="Discovery queue"
         text="Process one candidate at a time. The queue is bounded, resumable and cites the exact fixture records it evaluated."
         action={<AppButton primary disabled={busy || state.role !== "innmetric" || state.discovery.cursor >= (state.scope?.candidateCount ?? 4)} onClick={() => void onAction("discovery.run")}><Compass size={15} /> Process next candidate</AppButton>}
@@ -654,7 +661,7 @@ function HotelCase({ state, busy, onAction }: { state: DemoState; busy: boolean;
   }
   return (
     <>
-      <PageHead eyebrow="Versioned evidence and decisions" title="Hotel cases" text="Keep Hotel A's cost comparison separate from Hotel B's review-suggested need and representative declaration." />
+      <PageHead eyebrow="Proposed programme · versioned evidence and decisions" title="Hotel cases" text="Keep Hotel A's cost comparison separate from Hotel B's review-suggested need and representative declaration." />
       <div className="grid two">
         {canViewA && state.savings && <section className="card">
           <div className="card-title"><div><div className="card-kicker">Hotel A · distribution costs</div><h2 style={{ marginTop: 6 }}>Baseline versus observed</h2></div><span className={`pill ${savingsVerified ? "teal" : "amber"}`}>{savingsVerified ? "Jointly verified" : state.savings.status.replaceAll("_", " ")}</span></div>
@@ -723,14 +730,14 @@ function Support({ state, busy, onAction }: { state: DemoState; busy: boolean; o
   const [outcome, setOutcome] = useState<"completed" | "partial" | "rejected">("completed");
   const [remaining, setRemaining] = useState("");
   if (!state.support || !state.scope?.canViewSupport) {
-    return <><PageHead eyebrow="Programme support" title="Assigned case only." text="This simulated perspective cannot inspect Hotel B provider work or another hotel's case." /><div className="notice">Switch to InnMetric, Tourism Department, Hotel B, or the assigned service provider perspective.</div></>;
+    return <><PageHead eyebrow="Programme support" title="Assigned case only." text="This simulated perspective cannot inspect Hotel B provider work or another hotel's case." /><div className="notice">Switch to InnMetric, Tourism Department, Hotel B or the assigned service provider perspective.</div></>;
   }
   const allocationReady = joint(state.support.allocation.approvals, state.support.allocation.version, state.support.requestedSubsidyMinor);
   const supportReady = joint(state.support.approvals, state.support.version, state.support.requestedSubsidyMinor);
   const allConfirmed = state.outcome?.status === "verified";
   return (
     <>
-      <PageHead eyebrow="Hotel B · programme support" title="Confirm the need. Fund the work." text="Provider quote, Hotel B contribution, allocation authority, joint approvals, department funding, delivery and outcome confirmation are separate events." />
+      <PageHead eyebrow="Proposed programme · support for Hotel B" title="Confirm the need. Fund the work." text="Provider quote, Hotel B contribution, allocation authority, joint approvals, department funding, delivery and outcome confirmation are separate events." />
       {state.role !== "provider" && <div className="notice">Cross-hotel support remains attributed to Hotel A and requires joint InnMetric/department authorization. Hotel A acknowledgement is not a gate.</div>}
       <div className="grid two" style={{ marginTop: 16 }}>
         <section className="card">
@@ -817,7 +824,7 @@ function Funds({ state, balances, busy, onAction }: { state: DemoState; balances
   const collectionReady = joint(state.collection.approvals, state.collection.version, state.collection.amountMinor);
   return (
     <>
-      <PageHead eyebrow="Department-administered simulated ledger" title="Only collected cash can move." text="Savings, explicit collection approval, receipt, reservation, payment and correction records are separate events." />
+      <PageHead eyebrow="Proposed programme · department-administered simulated ledger" title="Only collected cash can move." text="Savings, explicit collection approval, receipt, reservation, payment and correction records are separate events." />
       <div className="grid three">
         <div className="card"><div className="card-kicker">Cash</div><div className="metric num">{money(balances.cash)}</div><div className="metric-sub">Receipts less posted programme payments</div></div>
         <div className="card"><div className="card-kicker">Reserved</div><div className="metric num">{money(balances.reserved)}</div><div className="metric-sub">Active approved commitments</div></div>
@@ -895,7 +902,7 @@ function Services({ state, busy, onAction }: { state: DemoState; busy: boolean; 
   const proposals = state.commercial.proposals;
   return (
     <>
-      <PageHead eyebrow="Independent InnMetric commercial services" title="Outside the programme pool." text="Subscription and on-demand proposals are separate commercial records. They do not create a programme withdrawal or a zero-price operation." />
+      <PageHead eyebrow="Separate from the proposed programme · InnMetric commercial services" title="Outside the programme pool." text="Subscription and on-demand proposals are separate commercial records. They do not create a programme withdrawal or a zero-price operation." />
       <div className="notice teal">Hotel C has no discovery evidence. A commercial inquiry is not a discovery finding, service need or affordability judgment.</div>
       <div className="grid two" style={{ marginTop: 16 }}>
         <section className="card">

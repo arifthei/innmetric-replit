@@ -255,7 +255,7 @@ export const PROGRAMME_STEPS: Step[] = [
     notes: [
       "InnMetric has no payment button. Programme payments are executed by the department only.",
       "Posted entries are never overwritten. A correction is a linked request with no cash effect of its own.",
-      "Provider delivery alone does not close the case. The outcome needs the department, Hotel B and InnMetric to confirm, and it is still open here.",
+      "Provider delivery alone does not close the case. The outcome needs confirmation from the department, Hotel B and InnMetric. It is still open here.",
     ],
     play: [
       { role: "department", action: "support.pay", remaining: once((s) => s.support?.status === "paid") },
