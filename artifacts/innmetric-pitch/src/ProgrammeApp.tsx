@@ -28,7 +28,9 @@ import {
   type DemoRole,
   type DemoSnapshot,
 } from "./lib/demo-api";
+import { Link } from "wouter";
 import { HotelService } from "./HotelService";
+import { PARTNER_ROUTES, rememberReturnPage, takeReturnPage } from "./partners/routes";
 import { STEPS, Walkthrough, type Page, type PlayAction } from "./walkthrough";
 
 const BANNER = "Demonstration data. Not a live service or government programme.";
@@ -172,7 +174,12 @@ function App() {
   const [snapshot, setSnapshot] = useState<DemoSnapshot | null>(null);
   const [sessionId, setSessionId] = useState("");
   const [walk, setWalk] = useState(readWalkPrefs);
-  const [page, setPage] = useState<Page>(() => STEPS[readWalkPrefs().step].page);
+  // Coming back from a partner pitch restores the page the visitor left instead of re-aligning to the walkthrough.
+  const [returnPage] = useState<Page | null>(() => {
+    const stored = takeReturnPage();
+    return stored && stored in PAGE_LABELS ? (stored as Page) : null;
+  });
+  const [page, setPage] = useState<Page>(() => returnPage ?? STEPS[readWalkPrefs().step].page);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -196,7 +203,7 @@ function App() {
   const loaded = Boolean(snapshot);
   useEffect(() => {
     // Align the simulated role with the walkthrough step once the session has loaded.
-    if (loaded && !walk.hidden) goToStep(walk.step);
+    if (loaded && !walk.hidden && !returnPage) goToStep(walk.step);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
   const balances = useMemo(
@@ -336,6 +343,14 @@ function App() {
           <h1>Guided demo</h1>
           <p>{message || "Loading a private synthetic session…"}</p>
           {message && <button className="btn" onClick={() => window.location.reload()}>Try again</button>}
+          {message && (
+            <p className="small muted" data-testid="partner-fallback">
+              The partner pitches run without the programme API:{" "}
+              {PARTNER_ROUTES.map(({ id, path, label }, index) => (
+                <span key={id}>{index > 0 && " · "}<Link href={path} className="link-button">{label}</Link></span>
+              ))}
+            </p>
+          )}
         </main>
       </div>
     );
@@ -373,6 +388,12 @@ function App() {
               >
                 <Icon /><span>{label}</span>
               </button>
+            ))}
+            <div className="nav-group">Partner Framework</div>
+            {PARTNER_ROUTES.map(({ id, path, label, icon: Icon }) => (
+              <Link key={id} href={path} className="nav-item" onClick={() => rememberReturnPage(page)} data-testid={`nav-partner-${id}`}>
+                <Icon /><span>{label}</span>
+              </Link>
             ))}
             <div className="nav-group">Demo</div>
             <button className={`nav-item ${page === "guide" ? "active" : ""}`} onClick={() => setPage("guide")}>

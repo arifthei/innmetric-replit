@@ -26,6 +26,15 @@ import { logger } from "../lib/logger";
 import { Router, type IRouter, type Request, type Response } from "express";
 
 const router: IRouter = Router();
+
+// Snapshots and exports belong to one visitor session. Keep them out of every shared cache, including
+// the innmetric.com/collab/api proxy, and mark the session header as a cache key for good measure.
+router.use("/demo", (_request, response, next) => {
+  response.set("Cache-Control", "private, no-store");
+  response.vary("X-Demo-Session");
+  next();
+});
+
 const sessionHeader = GetProgrammeDemoHeader.shape["X-Demo-Session"].unwrap();
 const actionSchema = ApplyProgrammeDemoActionBody.strict();
 

@@ -122,6 +122,17 @@ PORT=23425 BASE_PATH=/innmetric-pitch/ \
   pnpm --filter @workspace/innmetric-pitch run build
 ```
 
+### innmetric.com/collab/ build
+
+The same frontend is also published under `https://innmetric.com/collab/` by the website repository (`arifthei/innmetric`). Its Netlify build runs `web/scripts/stage-collab.mjs`, which checks out the commit pinned in `web/collab.source.json` and builds this package with:
+
+```bash
+PORT=4173 BASE_PATH=/collab/ VITE_DEMO_API_BASE=/collab/api \
+  pnpm --filter @workspace/innmetric-pitch run build
+```
+
+`VITE_DEMO_API_BASE` defaults to `/api`, so the Replit build above is unchanged. On Netlify, `/collab/api/*` is proxied to this project's published Replit API, so that deployment must run the same revision as the pinned frontend. Routes are `/`, `/partners/ireckonu/` and `/partners/torus-legacy/` under the base path; the two partner pitches do not call the API.
+
 The browser script uses `chromium` by default; set `CHROMIUM_BIN` for a different executable location. These commands describe available checks, not a guarantee that all checks currently pass.
 
 After modifying the OpenAPI contract, regenerate the shared API code:

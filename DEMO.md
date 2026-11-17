@@ -40,6 +40,17 @@ Times are a guide for pacing the talk.
 | 11. The department pays, the ledger shows it (0.5 min) | Department funds, Tourism Department | "The department records the AED 200 payment once. Pool cash is AED 800. Hotel B's AED 300 direct payment is listed outside department cash. InnMetric has no payment button." | Shortcut. |
 | 12. Two separate books (0.5 min) | InnMetric services, InnMetric | "InnMetric's own fees are a separate commercial record and never pass through the pool. Prices are not configured, so they show as unset, not zero." Close on what the demo does not claim. | Nothing. |
 
+## Partner Framework pitches
+
+Two separate proposals sit under **Partner Framework** in the sidebar. Each has its own address, loads directly, keeps its progress on refresh and runs without the programme API. **Present** hides the sidebar and controls; **Esc** or **Exit Present** returns. The browser's Back button returns to the main demo page you left.
+
+| Route | For | Story on screen | Close |
+| --- | --- | --- | --- |
+| `partners/ireckonu/` | Ireckonu, as a joint diagnostic and implementation pilot for one hotel group already using or evaluating Ireckonu | A sellable room shows as unavailable on mobile. **View evidence** puts a timestamped booking observation beside a simulated availability export for the same room, dates and occupancy; the mapping cause stays a hypothesis until the hotel confirms it. **Review proposed fix** shows who acts and who approves. **Run repeat check** completes the same path with seeded data. Direct booking completion and net distribution cost stay pending without actual records. | Choose one hotel group, one booking issue and one pilot owner; confirm customer fit, permitted data or sandbox access, delivery responsibilities and success measures. |
+| `partners/torus-legacy/` | An asset owner, family office or owner's representative, with Torus Legacy as proposed introductions and delivery partner | A private briefing for fictional Property A: what we found, what we recommend, who owns it, how we measure it. **Review engagement** shows the fixed-fee diagnostic scope, one accountable lead, optional implementation and the owner's next decision. Booking and service results are reported separately. | **Discuss one property** opens a meeting brief to copy. Nothing is sent. |
+
+Both are proposals. No agreement with or endorsement by Ireckonu or Torus Legacy exists. Fees, contracting and commercial splits are for the meeting. The data is fictional, and a public page stays public: an unlisted link, Present mode or `noindex` does not protect real client material.
+
 ## What the demo does not claim
 
 - It is not a live service. No hotel system, website, PMS, channel manager, booking engine, OTA account or business listing is read or changed.
