@@ -7,6 +7,7 @@ A synthetic hotel-discovery and service-coordination demo for a proposed Tourism
 ## Start here
 
 - [Guided demo script, limits and assumptions](DEMO.md)
+- [Run the demo on your own computer (Windows, macOS, Linux)](LOCAL_SETUP.md)
 - [Consolidated plan and business rules](plan.md)
 - [Download the PowerPoint presentation](InnMetric-Programme-Pitch.pptx)
 - [Project development guidance](replit.md)
@@ -54,6 +55,8 @@ React, TypeScript, Vite and Tailwind CSS on the frontend; Express on the backend
 | `InnMetric-Programme-Pitch.pptx` | Six-slide presentation export |
 
 ## Development setup
+
+Step-by-step instructions for Windows, macOS and Linux, including the platform-specific install step, are in [LOCAL_SETUP.md](LOCAL_SETUP.md).
 
 ### Requirements
 
