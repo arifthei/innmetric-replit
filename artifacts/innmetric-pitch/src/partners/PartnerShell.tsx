@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from "react";
-import { ArrowLeft, ArrowRight, Maximize2, Minimize2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Maximize2, Minimize2, RotateCcw } from "lucide-react";
 import { Link, useLocation, useSearch } from "wouter";
 
 import { PARTNER_ROUTES, type PartnerId } from "./routes";
@@ -33,11 +33,16 @@ export function writeStory(key: string, value: object) {
   try { sessionStorage.setItem(key, JSON.stringify(value)); } catch {}
 }
 
+/**
+ * One partner meeting. In Present mode only this partner's story is rendered: no sidebar, no top bar and no
+ * other partner's name anywhere in the page, its title or its accessibility text.
+ */
 export function PartnerShell({
   partner,
   title,
   banner,
   quiet = false,
+  onRestart,
   children,
 }: {
   partner: PartnerId;
@@ -45,6 +50,8 @@ export function PartnerShell({
   banner: string;
   /** Torus Legacy uses a quieter page: more whitespace, fewer panels. */
   quiet?: boolean;
+  /** Resets this page's story to its first step. */
+  onRestart: () => void;
   children: ReactNode;
 }) {
   const [present, setPresent] = usePresentMode();
@@ -70,6 +77,11 @@ export function PartnerShell({
     document.querySelector(".main-area")?.scrollTo({ top: 0 });
   }, [partner]);
 
+  const restart = () => {
+    onRestart();
+    document.querySelector(".main-area")?.scrollTo({ top: 0 });
+  };
+
   return (
     <div className={`demo-root partner-root${present ? " presenting" : ""}${quiet ? " quiet" : ""}`} data-testid={`partner-${partner}`}>
       <div className="demo-banner" role="note">{banner}</div>
@@ -85,8 +97,8 @@ export function PartnerShell({
             </div>
             <nav className="nav-list" aria-label="Main navigation">
               <div className="nav-group">Main demo</div>
-              <Link href="/" className="nav-item" data-testid="back-to-main">
-                <ArrowLeft /><span>Hotel service and programme</span>
+              <Link href="/" className="nav-item" data-testid="back-to-main" aria-label="Back to the main demo">
+                <ArrowLeft aria-hidden="true" /><span>Hotel service and programme</span>
               </Link>
               <div className="nav-group">Partner Framework</div>
               {PARTNER_ROUTES.map(({ id, path, label, icon: Icon }) => (
@@ -95,8 +107,9 @@ export function PartnerShell({
                   href={path}
                   className={`nav-item${id === partner ? " active" : ""}`}
                   aria-current={id === partner ? "page" : undefined}
+                  aria-label={label}
                 >
-                  <Icon /><span>{label}</span>
+                  <Icon aria-hidden="true" /><span>{label}</span>
                 </Link>
               ))}
             </nav>
@@ -108,25 +121,35 @@ export function PartnerShell({
 
         <main className="main-area">
           {present ? (
-            <button className="present-exit" onClick={() => setPresent(false)} data-testid="present-exit">
-              <Minimize2 size={14} /> Exit Present <kbd>Esc</kbd>
-            </button>
+            <div className="present-controls" role="group" aria-label="Present mode controls">
+              <button onClick={restart} data-testid="present-restart">
+                <RotateCcw size={14} aria-hidden="true" /> Restart
+              </button>
+              <button onClick={() => setPresent(false)} data-testid="present-exit">
+                <Minimize2 size={14} aria-hidden="true" /> Exit Present <kbd>Esc</kbd>
+              </button>
+            </div>
           ) : (
             <header className="topbar">
-              <div className="crumb"><span>Partner Framework</span><ArrowRight size={12} /><strong>{current.label}</strong></div>
+              <div className="crumb"><span>Partner Framework</span><ArrowRight size={12} aria-hidden="true" /><strong>{current.label}</strong></div>
               <div className="top-status">
                 <span className="pill amber">Proposal</span>
                 <span className="pill neutral">Fictional data</span>
                 <button className="btn" onClick={() => setPresent(true)} data-testid="present-toggle">
-                  <Maximize2 size={14} /> Present
+                  <Maximize2 size={14} aria-hidden="true" /> Present
                 </button>
               </div>
               <div className="mobile-actions">
-                <button className="btn small" onClick={() => setPresent(true)}><Maximize2 size={14} /> Present</button>
+                <button className="btn small" onClick={() => setPresent(true)}><Maximize2 size={14} aria-hidden="true" /> Present</button>
               </div>
             </header>
           )}
-          <div className={`page partner-page${quiet ? " quiet" : ""}`}>{children}</div>
+          <div className={`page partner-page${quiet ? " quiet" : ""}`}>
+            {children}
+            <button className="link-button story-reset" onClick={restart} data-testid="story-reset">
+              <RotateCcw size={12} aria-hidden="true" /> Restart the story
+            </button>
+          </div>
         </main>
       </div>
     </div>
@@ -146,4 +169,49 @@ export function StoryBlock({ id, kicker, title, children }: { id: string; kicker
 
 export function revealSoon(id: string) {
   requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: "start", behavior: "smooth" }));
+}
+
+/** What the partner brings, what InnMetric brings and what each side could gain. */
+export function PartnerExchange({
+  partnerName,
+  partnerBrings,
+  innmetricBrings,
+  gains,
+}: {
+  partnerName: string;
+  partnerBrings: ReactNode;
+  innmetricBrings: ReactNode;
+  gains: { who: string; text: ReactNode }[];
+}) {
+  return (
+    <section className="pitch-section exchange" aria-labelledby="exchange-title" data-testid="partner-exchange">
+      <div className="hs-kicker">The exchange</div>
+      <h2 id="exchange-title">What each side brings, and what each could gain.</h2>
+      <div className="exchange-grid">
+        <div><h3>What {partnerName} brings</h3><p>{partnerBrings}</p></div>
+        <div><h3>What InnMetric brings</h3><p>{innmetricBrings}</p></div>
+        <div>
+          <h3>What each side could gain</h3>
+          {gains.map((gain) => <p key={gain.who}><b>{gain.who}:</b> {gain.text}</p>)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** The commercial starting point and the meeting's closing question. */
+export function PitchClose({ commercial, question }: { commercial: ReactNode; question: string }) {
+  return (
+    <>
+      <section className="pitch-section" aria-labelledby="commercial-title">
+        <div className="hs-kicker">Commercial starting point · proposal</div>
+        <h2 id="commercial-title">Each side is paid for its own work.</h2>
+        <div className="commercial-text">{commercial}</div>
+      </section>
+      <section className="pitch-section ask" aria-labelledby="ask-title" data-testid="pitch-ask">
+        <div className="hs-kicker">The ask</div>
+        <h2 id="ask-title" className="ask-quote">“{question}”</h2>
+      </section>
+    </>
+  );
 }

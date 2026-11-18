@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Check, CircleDashed, ClipboardCheck, FileSearch, Play, RotateCcw, ShieldCheck, Smartphone } from "lucide-react";
+import { Check, ClipboardCheck, FileSearch, Play, ShieldCheck, Smartphone } from "lucide-react";
 
-import { PartnerShell, StoryBlock, readStory, revealSoon, writeStory } from "./PartnerShell";
+import { PartnerExchange, PartnerShell, PitchClose, StoryBlock, readStory, revealSoon, writeStory } from "./PartnerShell";
 
 const STORY_KEY = "innmetric-partner-ireckonu-v1";
 
@@ -79,6 +79,7 @@ export function IreckonuPitch() {
       partner="ireckonu"
       title="Ireckonu pilot proposal · InnMetric demo"
       banner="Proposal for discussion with Ireckonu. Fictional hotel and simulated exports. No agreement or endorsement is implied."
+      onRestart={() => setStory(START)}
     >
       <header className="pitch-head">
         <div className="eyebrow">Partner Framework · Ireckonu · joint pilot proposal</div>
@@ -86,7 +87,7 @@ export function IreckonuPitch() {
           Your platform connects the hotel's systems. InnMetric takes a guest-visible booking problem from evidence to an approved fix, then shows whether it worked.
         </p>
         <p className="lead">
-          A joint diagnostic and implementation pilot for one hotel group that already uses or is evaluating Ireckonu.
+          A joint diagnostic and implementation pilot for one hotel group that already uses Ireckonu or is evaluating it.
         </p>
       </header>
 
@@ -107,8 +108,8 @@ export function IreckonuPitch() {
         </section>
         <section className="card">
           <div className="card-kicker">Hotel group · decides</div>
-          <h3 className="role-title">Owns the systems and the data</h3>
-          <p className="small muted">Approves any data exchange and signs off every change before it goes live.</p>
+          <h3 className="role-title">Authorizes data access and changes</h3>
+          <p className="small muted">Owns its systems and data. Approves any data exchange and signs off every change before it goes live.</p>
         </section>
       </div>
 
@@ -227,7 +228,7 @@ export function IreckonuPitch() {
 
       {story.rechecked && (
         <>
-          <StoryBlock id="irk-recheck" kicker="Repeat check · 2026-11-14 10:05 UTC · seeded data" title="The same booking path now completes.">
+          <StoryBlock id="irk-recheck" kicker="Repeat check · 2026-11-14 10:05 UTC · seeded data" title="The mobile booking path reaches guest details.">
             <div className="card">
               {RECHECK.map(([step, result]) => (
                 <div className="check-row" key={step}><span>{step}</span><span className="status bookable"><Check size={12} /> {result}</span></div>
@@ -254,40 +255,40 @@ export function IreckonuPitch() {
         </>
       )}
 
-      <div className="pitch-section">
-        <div className="hs-kicker">Commercial model · proposal</div>
-        <h2>Each party bills for its own work.</h2>
-        <div className="card">
-          <div className="data-row"><span className="data-label">Platform</span><b className="data-value">Ireckonu licenses the platform to the hotel group</b></div>
-          <div className="data-row"><span className="data-label">Services</span><b className="data-value">InnMetric bills the hotel for diagnosis, implementation and optional monitoring</b></div>
-          <div className="data-row"><span className="data-label">Data</span><b className="data-value">The hotel approves any data exchange. No hotel or guest data is sold</b></div>
-          <div className="data-row"><span className="data-label">Starting point</span><b className="data-value">Consulting, referral or co-selling</b></div>
-          <div className="data-row"><span className="data-label">Software resale</span><b className="data-value">Only with Ireckonu's written authorization</b></div>
-        </div>
-        <p className="footer-note">Ireckonu's partner programme lists joint client engagements, paid workshops, training and demo environments. The pilot would use those routes.</p>
-      </div>
+      <PartnerExchange
+        partnerName="Ireckonu"
+        partnerBrings="Platform expertise and agreed access to a demo environment or hotel-authorized property-level data for a pilot."
+        innmetricBrings="A qualified hotel opportunity where available, guest-facing evidence, coordination of the hotel-approved fix and a documented retest."
+        gains={[
+          { who: "Ireckonu", text: "a concrete customer use case and a possible workshop, implementation or expansion opportunity." },
+          { who: "InnMetric", text: "the context to investigate and recheck a real guest-facing problem, if a pilot is agreed." },
+        ]}
+      />
 
-      <div className="pitch-section ask" data-testid="irk-ask">
-        <div className="hs-kicker">The ask</div>
-        <h2>Choose one hotel group, one booking issue and one pilot owner.</h2>
-        <p className="lead">Then confirm four things together:</p>
-        <ul className="ask-list">
-          {[
-            ["Customer fit", "A group that already uses or is evaluating Ireckonu, with a booking issue guests can see."],
-            ["Access", "Which property-level data or sandbox access the hotel permits."],
-            ["Delivery", "Who acts and who approves at each step."],
-            ["Success measures", "Repeat check, direct booking completion and net distribution cost."],
-          ].map(([label, text]) => <li key={label}><CircleDashed size={15} aria-hidden="true" /><span><b>{label}.</b> {text}</span></li>)}
-        </ul>
-      </div>
+      <section className="pitch-section" aria-labelledby="pilot-title" data-testid="proposed-pilot">
+        <div className="hs-kicker">One proposed pilot</div>
+        <h2 id="pilot-title">One hotel group, one guest-facing issue, one pilot owner.</h2>
+        <div className="card">
+          <div className="data-row"><span className="data-label">Hotel group</span><b className="data-value">An existing Ireckonu customer or one evaluating Ireckonu</b></div>
+          <div className="data-row"><span className="data-label">Issue</span><b className="data-value">One booking problem guests can see, like the mobile example above</b></div>
+          <div className="data-row"><span className="data-label">Pilot owner</span><b className="data-value">Named at the hotel group; authorizes data access and changes</b></div>
+          <div className="data-row"><span className="data-label">Steps</span><b className="data-value">Evidence, hotel-confirmed cause, approved fix, same-condition recheck</b></div>
+          <div className="data-row"><span className="data-label">Measures</span><b className="data-value">The recheck first; booking completion and net distribution cost once actual records exist</b></div>
+        </div>
+      </section>
+
+      <PitchClose
+        commercial={<>
+          <p>Ireckonu contracts for its platform. InnMetric charges for the diagnostic, implementation support and optional monitoring. Referral and co-selling terms can be explored.</p>
+          <p>All parties agree permitted data and delivery scope first. The offer concerns services and licensed platform access. Customer data stays within approved use.</p>
+        </>}
+        question="Can we choose one hotel group, one issue and one pilot owner, and agree the access and responsibilities for a first test?"
+      />
 
       <footer className="footer-note partner-footer">
         Fictional property, simulated exports and seeded results. Not connected to Ireckonu or any hotel system. Based on Ireckonu's public{" "}
         <a href="https://ireckonu.com/partner-program/" target="_blank" rel="noopener noreferrer">partner programme</a> and{" "}
         <a href="https://ireckonu.com/middleware/" target="_blank" rel="noopener noreferrer">middleware</a> pages.
-        <button className="link-button story-reset" onClick={() => { setStory(START); revealSoon("irk-issue"); }} data-testid="story-reset">
-          <RotateCcw size={12} /> Restart story
-        </button>
       </footer>
     </PartnerShell>
   );

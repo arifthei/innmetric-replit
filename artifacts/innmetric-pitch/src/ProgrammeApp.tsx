@@ -30,7 +30,7 @@ import {
 } from "./lib/demo-api";
 import { Link } from "wouter";
 import { HotelService } from "./HotelService";
-import { PARTNER_ROUTES, rememberReturnPage, takeReturnPage } from "./partners/routes";
+import { PARTNER_ROUTES, readStoredPage, storePage } from "./partners/routes";
 import { STEPS, Walkthrough, type Page, type PlayAction } from "./walkthrough";
 
 const BANNER = "Demonstration data. Not a live service or government programme.";
@@ -174,12 +174,14 @@ function App() {
   const [snapshot, setSnapshot] = useState<DemoSnapshot | null>(null);
   const [sessionId, setSessionId] = useState("");
   const [walk, setWalk] = useState(readWalkPrefs);
-  // Coming back from a partner pitch restores the page the visitor left instead of re-aligning to the walkthrough.
-  const [returnPage] = useState<Page | null>(() => {
-    const stored = takeReturnPage();
+  // A tab that already showed the demo restores its page and keeps its simulated role. Only a first visit
+  // aligns the page and role with the walkthrough step.
+  const [storedPage] = useState<Page | null>(() => {
+    const stored = readStoredPage();
     return stored && stored in PAGE_LABELS ? (stored as Page) : null;
   });
-  const [page, setPage] = useState<Page>(() => returnPage ?? STEPS[readWalkPrefs().step].page);
+  const [page, setPage] = useState<Page>(() => storedPage ?? STEPS[readWalkPrefs().step].page);
+  useEffect(() => storePage(page), [page]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -203,7 +205,7 @@ function App() {
   const loaded = Boolean(snapshot);
   useEffect(() => {
     // Align the simulated role with the walkthrough step once the session has loaded.
-    if (loaded && !walk.hidden && !returnPage) goToStep(walk.step);
+    if (loaded && !walk.hidden && !storedPage) goToStep(walk.step);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
   const balances = useMemo(
@@ -373,6 +375,7 @@ function App() {
             <div className="nav-group">Hotel service</div>
             <button
               className={`nav-item ${page === "hotel" ? "active" : ""}`}
+              aria-label={PAGE_LABELS.hotel}
               onClick={() => { setPage("hotel"); setMessage(""); }}
               aria-current={page === "hotel" ? "page" : undefined}
             >
@@ -383,6 +386,7 @@ function App() {
               <button
                 key={id}
                 className={`nav-item ${page === id ? "active" : ""}`}
+                aria-label={label}
                 onClick={() => { setPage(id); setMessage(""); }}
                 aria-current={page === id ? "page" : undefined}
               >
@@ -391,12 +395,12 @@ function App() {
             ))}
             <div className="nav-group">Partner Framework</div>
             {PARTNER_ROUTES.map(({ id, path, label, icon: Icon }) => (
-              <Link key={id} href={path} className="nav-item" onClick={() => rememberReturnPage(page)} data-testid={`nav-partner-${id}`}>
-                <Icon /><span>{label}</span>
+              <Link key={id} href={path} className="nav-item" aria-label={`${label} partner pitch`} data-testid={`nav-partner-${id}`}>
+                <Icon aria-hidden="true" /><span>{label}</span>
               </Link>
             ))}
             <div className="nav-group">Demo</div>
-            <button className={`nav-item ${page === "guide" ? "active" : ""}`} onClick={() => setPage("guide")}>
+            <button className={`nav-item ${page === "guide" ? "active" : ""}`} aria-label={PAGE_LABELS.guide} onClick={() => setPage("guide")}>
               <Activity /><span>{PAGE_LABELS.guide}</span>
             </button>
           </nav>
@@ -445,7 +449,7 @@ function App() {
           {page === "overview" && <Overview state={state} snapshot={snapshot} balances={balances} onNavigate={setPage} />}
           {page === "discovery" && <Discovery state={state} busy={busy} onAction={act} />}
           {page === "case" && <HotelCase state={state} busy={busy} onAction={act} />}
-          {page === "support" && <Support state={state} busy={busy} onAction={act} />}
+          {page === "support" && <Support state={state} events={snapshot.events} busy={busy} onAction={act} />}
           {page === "funds" && <Funds state={state} balances={balances} busy={busy} onAction={act} />}
           {page === "services" && <Services state={state} busy={busy} onAction={act} />}
           {page === "guide" && <Guide current={walk.step} onGo={(index) => { setWalk((current) => ({ ...current, hidden: false })); goToStep(index); }} />}
@@ -556,6 +560,7 @@ function Overview({
         <MetricCard label="Department cash · simulated" value={financeVisible ? money(balances.cash) : "Not visible"} sub={financeVisible ? `Available ${money(balances.available)} · reserved ${money(balances.reserved)}` : "Restricted to InnMetric and department"} onClick={() => onNavigate("funds")} />
         <MetricCard label="InnMetric commercial lane" value="Separate" sub="Prices and rates not configured" onClick={() => onNavigate("services")} />
       </div>
+      <WhoIsWho />
       <div className="grid two" style={{ marginTop: 16 }}>
         <section className="card">
           <div className="card-title"><div><div className="card-kicker">Evidence before inference</div><h2>Four different states</h2></div><span className="pill amber">Synthetic examples</span></div>
@@ -591,6 +596,36 @@ function Overview({
         ))}
       </div>
     </>
+  );
+}
+
+const WHO_ROLES: [string, string][] = [
+  ["InnMetric operator", "Finds the evidence, reviews savings and co-approves. Never holds or pays programme cash."],
+  ["Tourism Department", "Holds the pool. Posts receipts, reserves and records payments."],
+  ["Hotel representative", "Acts for one hotel at a time, chosen under the role picker."],
+  ["Service provider", "Sees its assigned quote and records delivery. No funding amounts."],
+];
+const WHO_HOTELS: [string, string][] = [
+  ["Hotel A", "Source property. Verified savings and the contribution come from here."],
+  ["Hotel B", "Beneficiary. Confirms its repair need, pays its own share and confirms the outcome."],
+  ["Hotel C", "A separate hotel with its own commercial inquiry. No access to Hotel B's case."],
+];
+
+function WhoIsWho() {
+  return (
+    <section className="card" id="who-is-who" style={{ marginTop: 16 }} data-testid="who-is-who">
+      <div className="card-title"><div><div className="card-kicker">Who is who</div><h2 style={{ marginTop: 6 }}>Four role types, three hotel identities</h2></div><span className="pill neutral">Simulated perspectives</span></div>
+      <div className="grid two">
+        <div>
+          <div className="card-kicker">Role types</div>
+          {WHO_ROLES.map(([name, text]) => <div className="who-row" key={name}><b>{name}</b><span>{text}</span></div>)}
+        </div>
+        <div>
+          <div className="card-kicker">Hotel identities</div>
+          {WHO_HOTELS.map(([name, text]) => <div className="who-row" key={name}><b>{name}</b><span>{text}</span></div>)}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -743,7 +778,7 @@ function HotelCase({ state, busy, onAction }: { state: DemoState; busy: boolean;
   );
 }
 
-function Support({ state, busy, onAction }: { state: DemoState; busy: boolean; onAction: ActionRunner }) {
+function Support({ state, events, busy, onAction }: { state: DemoState; events: DemoSnapshot["events"]; busy: boolean; onAction: ActionRunner }) {
   const [amount, setAmount] = useState(String((state.support?.requestedSubsidyMinor ?? 20000) / 100));
   const [quote, setQuote] = useState(String((state.support?.quoteMinor ?? 50000) / 100));
   const [scope, setScope] = useState(state.support?.quoteScope ?? "Repair wardrobe door and inspect affected fittings");
@@ -807,7 +842,7 @@ function Support({ state, busy, onAction }: { state: DemoState; busy: boolean; o
           <p className="footer-note">{allocationReady && supportReady ? "Both independent approval gates are complete. The department still has to reserve and pay." : "A missing reviewer blocks reservation; approvals are tied to the current version."}</p>
         </section>}
       </div>
-      <div className="section-title"><h2>Provider delivery and outcome</h2><span className={`pill ${allConfirmed ? "teal" : "amber"}`}>{state.outcome.status.replaceAll("_", " ")}</span></div>
+      <div className="section-title" id="outcome-review"><h2>Provider delivery and outcome</h2><span className={`pill ${allConfirmed ? "teal" : "amber"}`} data-testid="outcome-status">{state.outcome.status.replaceAll("_", " ")} · {state.outcome.confirmations.length} of 3 confirmations</span></div>
       <div className="grid two">
         <section className="card">
           <div className="card-kicker">Provider delivery</div><h3 style={{ marginTop: 7 }}>Delivery is not verification</h3>
@@ -831,7 +866,70 @@ function Support({ state, busy, onAction }: { state: DemoState; busy: boolean; o
           {state.outcome.status === "verified" && <div className="notice teal" style={{ marginTop: 10 }}>All three parties confirmed completion for the current delivery version.</div>}
         </section>
       </div>
+      <OutcomeAudit events={events} />
     </>
+  );
+}
+
+const ACTION_LABELS: Record<string, string> = {
+  "delivery.mark": "recorded delivery",
+  "outcome.confirm": "confirmed the outcome",
+};
+
+/** The delivery and outcome events from the server's append-only history, oldest first. */
+function OutcomeAudit({ events }: { events: DemoSnapshot["events"] }) {
+  const entries = events.filter((event: any) => event.action === "delivery.mark" || event.action === "outcome.confirm");
+  return (
+    <section className="card" style={{ marginTop: 16 }} data-testid="outcome-audit">
+      <div className="card-title"><div><div className="card-kicker">Audit trail · saved on the server</div><h3 style={{ marginTop: 6 }}>Delivery and outcome events</h3></div><span className="pill neutral">{entries.length} events</span></div>
+      {entries.length === 0
+        ? <p className="small muted">No delivery or outcome events yet.</p>
+        : entries.map((event: any) => {
+          const changed = event.previousStatus !== event.newStatus;
+          return (
+            <div className="audit-row" key={event.id} data-audit-action={event.action} data-audit-status={event.newStatus ?? ""}>
+              <span className="audit-seq num">#{event.sequence}</span>
+              <span><b>{ROLE_LABELS[event.actorRole as DemoRole] ?? event.actorRole}</b> {ACTION_LABELS[event.action]}{typeof event.payload?.result === "string" ? `: ${event.payload.result}` : ""}</span>
+              <span className={`status ${event.newStatus === "verified" ? "ok" : changed ? "open" : "neutral"}`}>
+                {changed ? `${String(event.previousStatus ?? "none").replaceAll("_", " ")} → ${String(event.newStatus ?? "").replaceAll("_", " ")}` : String(event.newStatus ?? "").replaceAll("_", " ")}
+              </span>
+            </div>
+          );
+        })}
+      <p className="footer-note">Visible to the perspectives that can see Hotel B's case. Entries are never edited after they are saved.</p>
+    </section>
+  );
+}
+
+/** The seeded money story, step by step, with each step ticked from the current server state. */
+function CashSequence({ state }: { state: DemoState }) {
+  const savingsVerified = state.savings?.status === "verified";
+  const collectionApproved = state.collection.posted || joint(state.collection.approvals, state.collection.version, state.collection.amountMinor);
+  const reserved = ["reserved", "paid"].includes(state.support?.status);
+  const paid = state.support?.status === "paid";
+  const direct = state.directPayments.length > 0;
+  const steps: [string, string, boolean][] = [
+    ["Candidate savings", `${money(state.savings?.candidateMinor)} at Hotel A`, state.savings?.candidateMinor != null],
+    ["Jointly verified", "InnMetric and department, four checks each", savingsVerified],
+    ["Collection approved", `${money(state.collection.amountMinor)}, approved jointly`, collectionApproved],
+    ["Department receipt", `Pool cash ${money(state.collection.amountMinor)}, attributed to Hotel A`, state.collection.posted],
+    ["Reserved for Hotel B", money(state.support?.requestedSubsidyMinor), reserved],
+    ["Paid by the department", money(state.support?.requestedSubsidyMinor), paid],
+    ["Paid directly by Hotel B", `${money(state.support?.hotelContributionMinor)}, outside the pool`, direct],
+    ["Repair covered", `${money(state.support?.quoteMinor)} quote`, paid && direct],
+  ];
+  return (
+    <section className="cash-sequence" id="cash-sequence" aria-label="Cash sequence" data-testid="cash-sequence">
+      <ol>
+        {steps.map(([label, detail, done], index) => (
+          <li key={label} className={done ? "done" : undefined} data-done={done ? "true" : "false"}>
+            <span className="stage-n">{done ? <Check size={11} aria-hidden="true" /> : index + 1}</span>
+            <span><b>{label}</b><span className="small muted">{detail}</span></span>
+          </li>
+        ))}
+      </ol>
+      <p className="small muted">Held and paid out by the Tourism Department. InnMetric's fees are a separate commercial book. All operations are simulated.</p>
+    </section>
   );
 }
 
@@ -846,6 +944,7 @@ function Funds({ state, balances, busy, onAction }: { state: DemoState; balances
   return (
     <>
       <PageHead eyebrow="Proposed programme · department-administered simulated ledger" title="Only collected cash can move." text="Savings, explicit collection approval, receipt, reservation, payment and correction records are separate events." />
+      <CashSequence state={state} />
       <div className="grid three">
         <div className="card"><div className="card-kicker">Cash</div><div className="metric num">{money(balances.cash)}</div><div className="metric-sub">Receipts less posted programme payments</div></div>
         <div className="card"><div className="card-kicker">Reserved</div><div className="metric num">{money(balances.reserved)}</div><div className="metric-sub">Active approved commitments</div></div>

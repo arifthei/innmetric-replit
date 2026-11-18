@@ -295,6 +295,34 @@ export function HotelService({
             </div>
           </div>
         </div>
+        <div className="card hotel-terms" data-testid="hotel-terms">
+          <div className="grid three">
+            <div>
+              <div className="card-kicker">What the hotel gets</div>
+              <ul className="hs-list">
+                <li>Matched evidence for each finding, with causes kept apart from symptoms</li>
+                <li>Only the changes its approver signed off, each with a reversal step</li>
+                <li>Repeat checks under the same conditions</li>
+                <li>A handover listing what is fixed and what is still open</li>
+              </ul>
+            </div>
+            <div>
+              <div className="card-kicker">What the hotel controls</div>
+              <ul className="hs-list">
+                <li>Sign-off on every live change, and its reversal</li>
+                <li>Rates, promotions and availability rules</li>
+                <li>Its systems, accounts and data</li>
+                <li>Whether open items such as the OTA 1 price difference are pursued</li>
+              </ul>
+            </div>
+            <div>
+              <div className="card-kicker">Commercial options</div>
+              <div className="data-row"><span className="data-label">Audit and Approved Repair Sprint</span><b className="data-value">{money(f.service.feeMinor)}</b></div>
+              <div className="data-row"><span className="data-label">Ongoing Distribution Control</span><b className="data-value">{money(f.service.subscriptionPriceMinor)}</b></div>
+              <p className="small muted" style={{ marginTop: 8 }}>Prices are not set in this demo, and no savings or revenue effect is claimed.</p>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* 5. Ongoing Distribution Control */}

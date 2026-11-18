@@ -14,18 +14,19 @@ export const APP_BASE = import.meta.env.BASE_URL.replace(/\/+$/, "");
 /** Absolute href for a path inside the app, e.g. appHref("/partners/ireckonu/") → "/collab/partners/ireckonu/". */
 export const appHref = (path: string) => `${APP_BASE}${path}`;
 
-/** Main demo page the visitor left when opening a partner pitch, so Back to the main demo lands there again. */
-export const RETURN_PAGE_KEY = "innmetric-demo-return-page-v1";
+/**
+ * The main demo page this tab last showed. Saved on every change and restored on every mount, so leaving for a
+ * partner page and coming back with Back/Forward (any number of times) never changes the page or the role.
+ */
+const PAGE_KEY = "innmetric-demo-page-v1";
 
-export function rememberReturnPage(page: string) {
-  try { sessionStorage.setItem(RETURN_PAGE_KEY, page); } catch {}
+export function storePage(page: string) {
+  try { sessionStorage.setItem(PAGE_KEY, page); } catch {}
 }
 
-export function takeReturnPage(): string | null {
+export function readStoredPage(): string | null {
   try {
-    const page = sessionStorage.getItem(RETURN_PAGE_KEY);
-    sessionStorage.removeItem(RETURN_PAGE_KEY);
-    return page;
+    return sessionStorage.getItem(PAGE_KEY);
   } catch {
     return null;
   }
