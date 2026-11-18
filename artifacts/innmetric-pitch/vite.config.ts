@@ -27,6 +27,14 @@ if (!basePath) {
   );
 }
 
+const apiBase = process.env.VITE_DEMO_API_BASE;
+
+if (apiBase !== undefined && !/^\/(?!\/)[A-Za-z0-9._~\-/]*$/.test(apiBase)) {
+  throw new Error(
+    `Invalid VITE_DEMO_API_BASE "${apiBase}". Use a same-origin path such as /api or /collab/api.`,
+  );
+}
+
 export default defineConfig({
   base: basePath,
   plugins: [

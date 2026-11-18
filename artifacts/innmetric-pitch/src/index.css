@@ -387,3 +387,135 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
+
+/* Programme clarity: who is who, the cash sequence, the outcome audit and the hotel's terms. */
+.who-row { @apply grid grid-cols-[150px_minmax(0,1fr)] gap-3 border-b border-border py-2 text-[13px] leading-snug last:border-b-0; }
+.who-row b { @apply font-semibold text-ink; }
+.who-row span { @apply text-stone-ink; }
+.cash-sequence { @apply mb-4 rounded-lg border border-card-border bg-card px-4 py-3.5; }
+.cash-sequence ol { @apply m-0 grid list-none grid-cols-4 gap-x-4 gap-y-3 p-0; }
+.cash-sequence li { @apply flex min-w-0 items-start gap-2 text-[12px] leading-snug text-muted-foreground; }
+.cash-sequence li b { @apply block text-[12px] font-semibold text-stone-ink; }
+.cash-sequence li .stage-n { @apply bg-stone-soft text-stone-ink; }
+.cash-sequence li.done b { @apply text-ink; }
+.cash-sequence li.done .stage-n { @apply bg-press text-paper; }
+.cash-sequence > p { @apply mt-3 mb-0 border-t border-border pt-2.5; }
+.audit-row { @apply grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-3 border-b border-border py-2 text-[13px] last:border-b-0; }
+.audit-seq { @apply text-[12px] font-semibold text-muted-foreground; }
+.hotel-terms { @apply mt-4; }
+@media (max-width: 1100px) { .cash-sequence ol { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) {
+  .who-row { grid-template-columns: 1fr; gap: 2px; }
+  .cash-sequence ol { grid-template-columns: 1fr; }
+  .audit-row { grid-template-columns: 36px minmax(0, 1fr); }
+  .audit-row .status { grid-column: 2; justify-self: start; white-space: normal; }
+}
+
+/* Partner Framework pitches (/partners/ireckonu/, /partners/torus-legacy/). Unlayered so Present mode
+   overrides the responsive shell rules above. */
+.app-shell.partner-shell.presenting { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); grid-template-areas: "main"; }
+.partner-side-note { @apply m-0 px-2 text-[11px] leading-snug text-muted-foreground; }
+.present-controls { @apply fixed right-4 bottom-4 z-10 inline-flex items-center gap-1 rounded-full border border-border bg-card/95 p-1 shadow-sm backdrop-blur; }
+.present-controls button { @apply inline-flex items-center gap-2 rounded-full border-0 bg-transparent px-3 py-1.5 text-[12px] font-medium text-stone-ink transition-colors hover:bg-stone-soft; }
+.present-controls kbd { @apply rounded border border-border px-1 font-sans text-[10px] text-muted-foreground; }
+.partner-page { @apply max-w-[1040px]; }
+/* Let wide tables scroll inside their card instead of stretching a one-column grid on phones. */
+.partner-page .grid > * { min-width: 0; }
+.partner-root.presenting .partner-page { @apply max-w-[980px] pt-14 pb-24; }
+.partner-root.presenting .story-reset { display: none; }
+
+.pitch-head { @apply mb-6; }
+.pitch-statement { @apply mt-1 mb-3 max-w-[820px] text-[clamp(22px,2.4vw,30px)] font-semibold leading-snug tracking-tight text-ink; }
+.partner-root.presenting .pitch-statement { font-size: clamp(26px, 3vw, 36px); }
+.role-trio { @apply mt-5; }
+.role-title { @apply mt-1.5 mb-1.5 text-[15px] leading-snug; }
+.card-icon { @apply flex-none text-press; }
+
+.story-strip { @apply mt-9 mb-0 flex list-none flex-wrap gap-2 p-0; }
+.story-strip li { @apply inline-flex items-center gap-2 rounded-full border border-border bg-card py-1 pr-3 pl-1 text-[12px] font-medium text-muted-foreground; }
+.story-strip li .stage-n { @apply bg-stone-soft text-stone-ink; }
+.story-strip li.done { @apply border-teal-line bg-wash text-press; }
+.story-strip li.done .stage-n { @apply bg-press text-paper; }
+.story-block { @apply mt-9 scroll-mt-[72px] border-t border-border pt-6; }
+.story-block > h2 { @apply mb-4 text-[20px]; }
+.story-actions { @apply mt-4 items-center; }
+.issue-card { @apply max-w-[640px]; }
+.match-line { @apply my-4 flex flex-wrap gap-x-5 gap-y-2 text-[13px] font-medium text-press; }
+.match-line span { @apply inline-flex items-center gap-1.5; }
+.hypothesis { @apply border-amber-line; }
+.hypothesis.confirmed { @apply border-teal-line; }
+.export-note { @apply mt-3 mb-0; }
+.raci-table td:first-child { @apply min-w-[180px]; }
+.gate-list { @apply mt-4 max-w-[720px] rounded-lg border border-card-border bg-card px-4; }
+.gate-list .check-row .btn { @apply flex-none; }
+.pitch-section { @apply mt-10 border-t border-border pt-6; }
+.pitch-section > h2 { @apply mb-4 text-[20px]; }
+.pitch-section .data-value { @apply max-w-[560px] font-medium; }
+.ask-list { @apply m-0 mt-3 grid list-none gap-3 p-0; }
+.ask-list li { @apply flex items-start gap-2.5 text-[14px] leading-relaxed; }
+.ask-list svg { @apply mt-1 flex-none text-press; }
+.partner-footer { @apply mt-12 border-t border-border pt-4; }
+.partner-footer a { @apply text-press underline underline-offset-2; }
+.story-reset { @apply mt-3 inline-flex items-center gap-1; }
+.exchange-grid { @apply grid grid-cols-3 gap-6; }
+.exchange-grid > div { @apply min-w-0 border-t-2 border-teal-line pt-3; }
+.exchange-grid h3 { @apply mb-2 text-[15px]; }
+.exchange-grid p { @apply mb-2 text-[14px] leading-relaxed text-ink; }
+.commercial-text { @apply grid max-w-[760px] gap-2 text-[14px] leading-relaxed text-ink; }
+.commercial-text p { @apply m-0; }
+.ask-quote { @apply m-0 max-w-[820px] border-l-2 border-asagi pl-4 text-[clamp(19px,2vw,24px)] leading-snug font-semibold text-ink; }
+.workstream { @apply mt-8 grid gap-1.5 border-t border-border pt-5; }
+.workstream p { @apply m-0; }
+.workstream-status { @apply flex items-center gap-2 text-[15px] font-semibold text-kaki; }
+
+/* Torus Legacy: a private briefing. More whitespace, fewer panels. */
+.partner-page.quiet { @apply pt-12; }
+.quiet .pitch-head { @apply mb-14; }
+.quiet .lead { @apply max-w-[720px] text-[15px]; }
+.briefing { @apply border-t border-ink/70 pt-8; }
+.briefing-meta h2 { @apply mb-1 text-[22px]; }
+.briefing-meta p { @apply m-0; }
+.briefing-flow { @apply m-0 mt-8 grid list-none grid-cols-2 gap-x-10 gap-y-6 p-0; }
+.briefing-flow li p { @apply m-0 mb-4 text-[14px] leading-relaxed text-ink; }
+.briefing-step { @apply mb-4 flex items-center justify-between gap-2 border-b border-border pb-2 text-[11px] font-semibold uppercase tracking-[.08em] text-press; }
+.briefing-step svg { @apply hidden flex-none text-muted-foreground; }
+.briefing-tag { @apply mt-1.5 block text-[11px] font-semibold uppercase tracking-[.06em] text-kaki; }
+.quiet .story-actions { @apply mt-10; }
+.quiet-section { @apply mt-16 scroll-mt-[72px] border-t border-border pt-8; }
+.quiet-section > h2 { @apply mb-6 text-[22px]; }
+.engagement-list { @apply m-0 grid; }
+.engagement-list > div { @apply grid grid-cols-[200px_minmax(0,1fr)] gap-6 border-b border-border py-4 last:border-b-0; }
+.engagement-list dt { @apply text-[13px] font-semibold text-stone-ink; }
+.engagement-list dd { @apply m-0 text-[14px] leading-relaxed text-ink; }
+.result-pair { @apply grid grid-cols-2 gap-10; }
+.result-pair p { @apply m-0; }
+.result-label { @apply text-[11px] font-semibold uppercase tracking-[.08em] text-muted-foreground; }
+.result-pair .result-value { @apply my-2 flex items-center gap-2 text-[17px] font-semibold text-press; }
+.brief-dialog { @apply m-auto w-[min(640px,calc(100vw-32px))] rounded-xl border border-card-border bg-card p-6 text-ink shadow-xl; }
+.brief-dialog::backdrop { background: rgb(28 25 23 / .35); }
+.brief-head { @apply mb-2 flex items-center justify-between gap-3; }
+.brief-head h2 { @apply m-0; }
+.brief-text { @apply mt-3 min-h-[300px] text-[13px] leading-relaxed; }
+
+@media (max-width: 1000px) {
+  .partner-shell:not(.presenting) .exchange-grid { grid-template-columns: 1fr; gap: 20px; }
+}
+/* Four columns only when the content area is wide enough to read them; arrows only in that layout. */
+@media (min-width: 1280px) {
+  .briefing-flow { grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 32px; }
+  .briefing-step svg { display: block; }
+}
+@media (min-width: 960px) {
+  .partner-root.presenting .briefing-flow { grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 32px; }
+  .partner-root.presenting .briefing-step svg { display: block; }
+}
+@media (max-width: 700px) {
+  .briefing-flow, .result-pair, .exchange-grid { grid-template-columns: 1fr; gap: 20px; }
+  .engagement-list > div { grid-template-columns: 1fr; gap: 4px; }
+  .partner-page.quiet { padding-top: 28px; }
+  .quiet .pitch-head { margin-bottom: 36px; }
+  .quiet-section { margin-top: 40px; }
+  .story-strip li { font-size: 11px; }
+  .gate-list .check-row { flex-direction: row; align-items: center; }
+  .partner-root.presenting .partner-page { padding-top: 24px; }
+}

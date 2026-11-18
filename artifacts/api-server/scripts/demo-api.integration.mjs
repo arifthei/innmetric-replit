@@ -40,6 +40,8 @@ async function rejected(action, payload, status) {
 
 const first = await request("/demo", sessionId);
 assert.equal(first.response.status, 200);
+assert.match(first.response.headers.get("cache-control") ?? "", /\bno-store\b/, "session responses must not be cached");
+assert.match(first.response.headers.get("cache-control") ?? "", /\bprivate\b/, "session responses must be private");
 assert.equal(first.body.state.dataMode, "synthetic");
 assert.equal(first.body.state.savings.baselineMinor, 500000);
 assert.equal(first.body.state.savings.observedMinor, 400000);

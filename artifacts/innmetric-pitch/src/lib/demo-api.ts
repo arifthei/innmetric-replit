@@ -41,6 +41,19 @@ export type DemoExport = ReturnType<typeof ExportProgrammeDemoResponse.parse>;
 
 const SESSION_KEY = "innmetric-programme-demo-session-v1";
 
+/**
+ * Where the programme API lives. Replit routes `/api` on the same origin, so that stays the default.
+ * The Netlify build of innmetric.com/collab/ sets VITE_DEMO_API_BASE=/collab/api, which the site
+ * proxies to the Replit API.
+ */
+export function resolveApiBase(raw: string | undefined) {
+  const value = (raw ?? "").trim().replace(/\/+$/, "");
+  // vite.config.ts rejects anything else at build time; never let a bad value break the partner pages.
+  return value.startsWith("/") && !value.startsWith("//") ? value : "/api";
+}
+
+export const API_BASE = resolveApiBase(import.meta.env.VITE_DEMO_API_BASE);
+
 export function getOrCreateSessionId() {
   let id = sessionStorage.getItem(SESSION_KEY);
   if (!id) {
@@ -63,7 +76,7 @@ async function parseResponse<T>(response: Response, schema: { parse: (data: unkn
 }
 
 export async function loadDemo(sessionId: string) {
-  const response = await fetch("/api/demo", {
+  const response = await fetch(`${API_BASE}/demo`, {
     headers: { "X-Demo-Session": sessionId },
   });
   return parseResponse(response, GetProgrammeDemoResponse);
@@ -80,7 +93,7 @@ export async function sendDemoAction(
     payload,
     ...(idempotencyKey ? { idempotencyKey } : {}),
   });
-  const response = await fetch("/api/demo/actions", {
+  const response = await fetch(`${API_BASE}/demo/actions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -92,7 +105,7 @@ export async function sendDemoAction(
 }
 
 export async function downloadDemoExport(sessionId: string) {
-  const response = await fetch("/api/demo/export", {
+  const response = await fetch(`${API_BASE}/demo/export`, {
     headers: { "X-Demo-Session": sessionId },
   });
   const data = await parseResponse(response, ExportProgrammeDemoResponse);

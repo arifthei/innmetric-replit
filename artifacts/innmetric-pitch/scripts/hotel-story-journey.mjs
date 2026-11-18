@@ -3,6 +3,8 @@ import { runJourney } from "./cdp-harness.mjs";
 
 const BANNER = "Demonstration data. Not a live service or government programme.";
 const KAKI = "rgb(138, 75, 46)";
+// 6 hotel service steps and 14 proposed programme steps.
+const TOTAL_STEPS = 20;
 
 await runJourney(async ({ evaluate, waitFor, clickButton, selectValue }) => {
   // Text checks ignore case because headings and labels are upper-cased in CSS.
@@ -17,7 +19,7 @@ await runJourney(async ({ evaluate, waitFor, clickButton, selectValue }) => {
   };
   const has = (value) => `document.body.innerText.toLowerCase().includes(${JSON.stringify(lower(value))})`;
   const stepIs = (number) =>
-    `(document.querySelector('.walk-count')?.innerText ?? '').toUpperCase().startsWith('STEP ${number} OF 12')`;
+    `/^STEP ${number} OF ${TOTAL_STEPS}\\b/.test((document.querySelector('.walk-count')?.innerText ?? '').toUpperCase())`;
   const role = () => evaluate("document.querySelector('#role-picker').value");
   const exists = (selector) => `Boolean(document.querySelector(${JSON.stringify(selector)}))`;
   const next = async (number) => {
@@ -122,34 +124,132 @@ await runJourney(async ({ evaluate, waitFor, clickButton, selectValue }) => {
   await selectValue("#role-picker", "innmetric");
   await waitFor(has("Open the proposed programme"), "the programme link");
 
-  // 7. The last hotel step links to the proposed programme. Fixture numbers are unchanged.
+  // What the hotel gets, controls and can buy: both commercial options stay unset.
+  const terms = await sectionText('[data-testid="hotel-terms"]');
+  for (const phrase of ["What the hotel gets", "What the hotel controls", "Commercial options", "OTA 1 price difference"]) {
+    assert.ok(terms.includes(phrase), `Hotel terms should include ${phrase}`);
+  }
+  assert.equal(await evaluate(`(document.querySelector('[data-testid="hotel-terms"]').innerText.match(/Not configured/g) ?? []).length`), 2);
+
+  const metrics = () => evaluate("[...document.querySelectorAll('.metric')].map((el) => el.innerText).join('|')");
+  const roleIs = (role, hotel) =>
+    waitFor(
+      `document.querySelector('#role-picker')?.value === ${JSON.stringify(role)}` +
+        (hotel ? ` && document.querySelector('[aria-label="Hotel representative perspective"]')?.value === ${JSON.stringify(hotel)}` : ""),
+      `the ${role}${hotel ? ` ${hotel}` : ""} perspective`,
+    );
+  const record = async (count) => {
+    await clickButton("Record this step's actions");
+    await waitFor(has(`Recorded ${count} synthetic action${count === 1 ? "" : "s"}`), `${count} recorded action(s)`);
+  };
+  const outcomeIs = (status, confirmations) =>
+    waitFor(
+      `(document.querySelector('[data-testid="outcome-status"]')?.innerText ?? '').toLowerCase() === ${JSON.stringify(`${status} · ${confirmations} of 3 confirmations`)}`,
+      `outcome ${status}, ${confirmations} of 3`,
+    );
+
+  // 7. The last hotel step links to the proposed programme. Who is who separates role types from hotels.
   await clickButton("Open the proposed programme");
   await waitFor(`${stepIs(7)} && ${exists('[data-testid="proposal-tag"]')}`, "the proposed programme overview");
-  await waitFor("document.querySelector('#role-picker').value === 'department'", "the department perspective");
+  await roleIs("department");
   assert.ok((await text()).includes("AED 0.00"));
+  const who = await sectionText('[data-testid="who-is-who"]');
+  for (const name of ["Role types", "Hotel identities", "Service provider", "Hotel A", "Hotel B", "Hotel C"]) assert.ok(who.includes(name), `Who is who should list ${name}`);
   await bannerShown();
   await evaluate("(() => { const c = document.querySelector('.walk-toggle input'); if (!c.checked) c.click(); })()");
   await waitFor(exists('[data-testid="presenter-notes"]'), "presenter notes");
 
+  // 8. InnMetric runs discovery.
   await next(8);
+  await roleIs("innmetric");
+  await record(4);
+  await waitFor(has("4 / 4 processed"), "the completed discovery queue");
+
+  // 9. Hotel A is the source property and sees only its own case.
+  await next(9);
+  await roleIs("hotel", "hotel-a");
   await waitFor(has("Baseline versus observed"), "Hotel A cost comparison");
   for (const amount of ["AED 5,000.00", "AED 4,000.00", "AED 1,000.00"]) assert.ok((await text()).includes(amount), `Expected ${amount}`);
-  await next(9);
+  assert.ok(!(await text()).includes("Review signal, then confirmation"), "Hotel A must not see Hotel B's case");
+  assert.ok((await sectionText(".walk-role")).includes("Hotel identity: Hotel A"));
+
+  // 10. Hotel B confirms its own need.
   await next(10);
-  await clickButton("Record this step's actions");
-  await waitFor(has("Recorded 15 synthetic actions"), "the presenter shortcut up to the reservation");
+  await roleIs("hotel", "hotel-b");
+  await record(1);
+  await waitFor(has("Hotel confirmed"), "Hotel B's confirmed need");
+
+  // 11. Savings are verified jointly but create no cash.
   await next(11);
+  await roleIs("innmetric");
+  await record(2);
+  await waitFor(has("Jointly verified"), "joint savings verification");
+
+  // 12. The department receipt creates AED 1,000 of pool cash.
+  await next(12);
+  await roleIs("department");
+  await record(3);
+  await waitFor(`${has("Only collected cash can move.")} && document.querySelectorAll('[data-testid="cash-sequence"] li[data-done="true"]').length === 4`, "the first four cash steps");
+  assert.ok((await metrics()).startsWith("AED 1,000.00|AED 0.00|AED 1,000.00"), `Cash after receipt was ${await metrics()}`);
+
+  // 13. The provider sees its quote but no funding amounts.
+  await next(13);
+  await roleIs("provider");
+  await waitFor(`${has("provider quote AED 500.00")} && ${has("Not shared with provider")}`, "the provider's quote view");
+
+  // 14. Joint approvals and the department reservation.
+  await next(14);
+  await roleIs("department");
+  await record(5);
+  await waitFor(has("reserved"), "the reservation");
+
+  // 15. AED 200 from the pool and AED 300 directly from Hotel B.
+  await next(15);
+  await roleIs("department");
   await waitFor(has("Only collected cash can move."), "department funds");
-  const reserved = await evaluate("[...document.querySelectorAll('.metric')].map((el) => el.innerText).join('|')");
-  assert.ok(reserved.startsWith("AED 1,000.00|AED 200.00|AED 800.00"), `Cash, reserved and available were ${reserved}`);
-  await clickButton("Record this step's actions");
-  await waitFor(has("Recorded 3 synthetic actions"), "payment, direct payment and delivery");
-  const paid = await evaluate("[...document.querySelectorAll('.metric')].map((el) => el.innerText).join('|')");
-  assert.ok(paid.startsWith("AED 800.00|AED 0.00|AED 800.00"), `Cash, reserved and available were ${paid}`);
+  assert.ok((await metrics()).startsWith("AED 1,000.00|AED 200.00|AED 800.00"), `Cash, reserved and available were ${await metrics()}`);
+  await record(2);
+  await waitFor(`document.querySelectorAll('[data-testid="cash-sequence"] li[data-done="true"]').length === 8`, "every cash step done");
+  assert.ok((await metrics()).startsWith("AED 800.00|AED 0.00|AED 800.00"), `Cash, reserved and available were ${await metrics()}`);
   const funds = await text();
   assert.ok(funds.includes("Hotel B direct payment · excluded from department pool"));
   assert.ok(funds.includes("AED 300.00"));
-  await next(12);
+  assert.ok(funds.includes("InnMetric's fees are a separate commercial book"));
+
+  // 16. Delivery is recorded; the outcome waits for three confirmations.
+  await next(16);
+  await roleIs("provider");
+  await record(1);
+  await outcomeIs("awaiting confirmations", 0);
+
+  // 17. InnMetric and the department confirm: two of three, still open.
+  await next(17);
+  await roleIs("department");
+  await record(2);
+  await outcomeIs("awaiting confirmations", 2);
+
+  // 18. Hotel B's matching confirmation verifies the outcome, and the audit shows the change.
+  await next(18);
+  await roleIs("hotel", "hotel-b");
+  await record(1);
+  await outcomeIs("verified", 3);
+  assert.equal(await evaluate(`document.querySelectorAll('[data-audit-action="outcome.confirm"]').length`), 3);
+  assert.equal(await evaluate(`document.querySelectorAll('[data-audit-action="outcome.confirm"][data-audit-status="verified"]').length`), 1);
+  assert.equal(await evaluate(`document.querySelectorAll('[data-audit-action="delivery.mark"]').length`), 1);
+
+  // 19. Hotel C has its own records and no access to Hotel B's case.
+  await next(19);
+  await roleIs("hotel", "hotel-c");
+  await record(1);
+  await waitFor(`${has("Commercial conversation")} && ${has("requested")}`, "Hotel C's own commercial request");
+  await clickButton("Programme support");
+  await waitFor(has("Assigned case only."), "Hotel C's restricted support view");
+  await clickButton("Department funds");
+  await waitFor(has("Restricted financial view."), "Hotel C's restricted funds view");
+
+  // 20. Two separate books.
+  await next(20);
+  await roleIs("innmetric");
   await waitFor(has("Outside the programme pool."), "the separate commercial book");
   assert.ok((await text()).includes("Not configured"));
   assert.equal(await evaluate(exists('[data-testid="proposal-tag"]')), false);
@@ -162,5 +262,5 @@ await runJourney(async ({ evaluate, waitFor, clickButton, selectValue }) => {
   assert.ok(elapsed < 5000, `Reset took ${elapsed} ms.`);
   await bannerShown();
 
-  console.log(`Hotel story journey passed: 12 steps, sign-off gate, reversal, repeat checks, monitoring, programme numbers and reset in ${elapsed} ms.`);
+  console.log(`Hotel story journey passed: ${TOTAL_STEPS} steps, sign-off gate, reversal, repeat checks, monitoring, every programme perspective, three-party outcome, Hotel C scoping and reset in ${elapsed} ms.`);
 });
