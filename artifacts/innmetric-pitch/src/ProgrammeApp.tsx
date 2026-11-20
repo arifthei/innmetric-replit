@@ -34,6 +34,8 @@ import { PARTNER_ROUTES, readStoredPage, storePage } from "./partners/routes";
 import { STEPS, Walkthrough, type Page, type PlayAction } from "./walkthrough";
 
 const BANNER = "Demonstration data. Not a live service or government programme.";
+const HOTEL_INTRO = "We help independent hotels win back direct bookings. AI helps us spot reseller links, lower rates for the same room and terms, and broken checkout. The hotel approves repairs and can hire us for ongoing checks.";
+const PROGRAMME_INTRO = "In our proposed programme, InnMetric and the tourism department would verify savings together. Only the department would collect contributions and pay local suppliers for work other hotels need.";
 const SESSION_KEY = "innmetric-programme-demo-session-v1";
 const WALK_KEY = "innmetric-walkthrough-v1";
 
@@ -204,8 +206,8 @@ function App() {
   const state = snapshot?.state as unknown as DemoState | undefined;
   const loaded = Boolean(snapshot);
   useEffect(() => {
-    // Align the simulated role with the walkthrough step once the session has loaded.
-    if (loaded && !walk.hidden && !storedPage) goToStep(walk.step);
+    // Open the first visit at the public introduction. Later steps restore their case anchors.
+    if (loaded && !walk.hidden && !storedPage && (walk.step !== 0 || state?.role !== STEPS[0].role)) goToStep(walk.step);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
   const balances = useMemo(
@@ -223,7 +225,7 @@ function App() {
     try {
       const next = await sendDemoAction(sessionId, action, payload, idempotencyKey);
       setSnapshot(next);
-      setMessage("Saved to this visitor's synthetic server session.");
+      setMessage("Saved to your demo.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Action was not completed.");
     } finally {
@@ -342,12 +344,14 @@ function App() {
         <div className="demo-banner" role="note">{BANNER}</div>
         <main className="loading-shell" aria-live="polite">
           <div className="brand"><span className="brand-mark" aria-hidden="true" /><span className="brand-name">innmetric</span></div>
-          <h1>Guided demo</h1>
-          <p>{message || "Loading a private synthetic session…"}</p>
+          <h1>Hotel bookings and tourism funding</h1>
+          <p>{HOTEL_INTRO}</p>
+          <p>{PROGRAMME_INTRO}</p>
+          <p>{message || "Opening the demo…"}</p>
           {message && <button className="btn" onClick={() => window.location.reload()}>Try again</button>}
           {message && (
             <p className="small muted" data-testid="partner-fallback">
-              The partner pitches run without the programme API:{" "}
+              Partner demos{" · "}
               {PARTNER_ROUTES.map(({ id, path, label }, index) => (
                 <span key={id}>{index > 0 && " · "}<Link href={path} className="link-button">{label}</Link></span>
               ))}
@@ -415,10 +419,6 @@ function App() {
         <header className="topbar">
           <div className="crumb"><span>{isProgrammePage ? "Proposed programme" : "InnMetric"}</span><ArrowRight size={12} /><strong>{PAGE_LABELS[page]}</strong></div>
           <div className="top-status">
-            <span className="pill amber">Synthetic data</span>
-            <span className="pill teal">Server-persisted demo</span>
-            <span className="pill neutral">Simulated roles and payments</span>
-            {isProgrammePage && <span className="pill neutral">Proposed programme</span>}
             {walk.hidden && <AppButton onClick={() => setWalk((current) => ({ ...current, hidden: false }))}><Activity size={14} /> Walkthrough</AppButton>}
             <AppButton onClick={() => void exportSession()} disabled={busy}><Download size={14} /> Export</AppButton>
           </div>
@@ -433,8 +433,18 @@ function App() {
           )}
           {isProgrammePage && (
             <div className="proposal-tag" data-testid="proposal-tag">
-              <b>Proposed programme.</b> A proposal for discussion with a tourism department. Not adopted, not a government scheme. The department would hold the pool. InnMetric never holds it.
+              <b>Proposed programme.</b> Only the tourism department would hold and pay out pooled funds.
             </div>
+          )}
+          {page === "hotel" && (
+            <section aria-label="About InnMetric" className="card" style={{ marginBottom: 20 }}>
+              <p>{HOTEL_INTRO}</p>
+              <p>{PROGRAMME_INTRO}</p>
+              <div className="btn-row">
+                <AppButton disabled={busy} onClick={() => goToStep(0)}>See the hotel example</AppButton>
+                <AppButton disabled={busy} onClick={() => goToStep(programmeStart)}>See the tourism programme</AppButton>
+              </div>
+            </section>
           )}
           {page === "hotel" && (
             <HotelService
@@ -454,7 +464,7 @@ function App() {
           {page === "services" && <Services state={state} busy={busy} onAction={act} />}
           {page === "guide" && <Guide current={walk.step} onGo={(index) => { setWalk((current) => ({ ...current, hidden: false })); goToStep(index); }} />}
           <footer className="footer-note">
-            All records and operations are synthetic. The role switcher is not authentication. No live discovery, government affiliation, real uploads, funds, payments or checkout are connected. No official insignia or endorsement. Session {sessionId.slice(0, 8)}.
+            Sample records and payments. Role selection is for this demo only. Session {sessionId.slice(0, 8)}.
           </footer>
         </div>
       </main>
@@ -509,7 +519,7 @@ function RoleControls({
           {HOTEL_OPTIONS.map((hotel) => <option key={hotel.id} value={hotel.id}>{hotel.name}</option>)}
         </select>
       )}
-      <div className="role-caption">Four simulated role types; hotel A, B and C perspectives are scoped separately.</div>
+      <div className="role-caption">Choose a role to see its records and actions.</div>
     </div>
   );
 }
@@ -543,9 +553,9 @@ function Overview({
     <>
       <PageHead
         eyebrow="Proposed programme · overview"
-        title="From evidence to accountable service."
-        text="One persistent synthetic journey links discovery, hotel confirmation, joint review, department-controlled support, provider delivery and outcome confirmation."
-        action={<AppButton primary onClick={() => onNavigate("discovery")}><Compass size={15} /> Continue journey</AppButton>}
+        title="How one hotel’s savings can help another."
+        text={financeVisible ? "In this example, Hotel A contributes AED 1,000. The department pays AED 200 toward a local carpenter’s AED 500 repair at Hotel B. Hotel B pays the other AED 300." : "A participating hotel confirms the work it needs. A local supplier quotes and delivers it."}
+        action={<AppButton primary onClick={() => onNavigate("discovery")}><Compass size={15} /> Review the hotels</AppButton>}
       />
       <div className="step-strip" aria-label="Programme stages">
         {["Discover", "Review", "Approve", "Fund", "Deliver"].map((stage, index) => (
@@ -556,24 +566,24 @@ function Overview({
         ))}
       </div>
       <div className="grid three">
-        <MetricCard label="Candidates processed" value={`${processed} / ${candidateCount}`} sub="Finite synthetic queue" onClick={() => onNavigate("discovery")} />
+        <MetricCard label="Candidates processed" value={`${processed} / ${candidateCount}`} sub="Demo hotels" onClick={() => onNavigate("discovery")} />
         <MetricCard label="Department cash · simulated" value={financeVisible ? money(balances.cash) : "Not visible"} sub={financeVisible ? `Available ${money(balances.available)} · reserved ${money(balances.reserved)}` : "Restricted to InnMetric and department"} onClick={() => onNavigate("funds")} />
-        <MetricCard label="InnMetric commercial lane" value="Separate" sub="Prices and rates not configured" onClick={() => onNavigate("services")} />
+        <MetricCard label="InnMetric services" value="Separate" sub="Hotel subscriptions and one-off work" onClick={() => onNavigate("services")} />
       </div>
       <WhoIsWho />
       <div className="grid two" style={{ marginTop: 16 }}>
         <section className="card">
-          <div className="card-title"><div><div className="card-kicker">Evidence before inference</div><h2>Four different states</h2></div><span className="pill amber">Synthetic examples</span></div>
+          <div className="card-title"><div><h2>What we know about each hotel</h2></div><span className="pill amber">Synthetic examples</span></div>
           {financeVisible ? <>
-            <div className="data-row"><span className="data-label">Hotel A</span><b className="data-value">Candidate route failure · two observations</b></div>
-            <div className="data-row"><span className="data-label">Hotel B</span><b className="data-value">Carpentry suggested · hotel must confirm</b></div>
-            <div className="data-row"><span className="data-label">Hotel C</span><b className="data-value">Commercial inquiry · no discovery evidence</b></div>
-            <div className="data-row"><span className="data-label">Hotel D</span><b className="data-value">Unverified · bot-blocked observation</b></div>
-          </> : <div className="data-row"><span className="data-label">{scopedHotel?.name ?? "Assigned Hotel B"}</span><b className="data-value">Your view is limited to this synthetic perspective.</b></div>}
-          <p className="footer-note">Review excerpts do not establish affordability, eligibility or a proven fault.</p>
+            <div className="data-row"><span className="data-label">Hotel A</span><b className="data-value">Booking link failed twice</b></div>
+            <div className="data-row"><span className="data-label">Hotel B</span><b className="data-value">Reviews mention broken furniture</b></div>
+            <div className="data-row"><span className="data-label">Hotel C</span><b className="data-value">Asked about InnMetric services</b></div>
+            <div className="data-row"><span className="data-label">Hotel D</span><b className="data-value">Booking check blocked</b></div>
+          </> : <div className="data-row"><span className="data-label">{scopedHotel?.name ?? "Assigned Hotel B"}</span><b className="data-value">Your assigned case</b></div>}
+          <p className="footer-note">Hotels confirm the need and what they can afford.</p>
         </section>
         <section className="card">
-          <div className="card-title"><div><div className="card-kicker">Recent event history</div><h2>Saved on the server</h2></div><span className="pill neutral">{snapshot.events.length} events</span></div>
+          <div className="card-title"><div><h2>Recent decisions and actions</h2></div><span className="pill neutral">{snapshot.events.length} events</span></div>
           {latest.length === 0 ? <p className="small muted">No actions recorded yet.</p> : latest.map((event: any) => (
             <div className="evidence" key={event.id} style={{ marginTop: 8 }}>
               <Activity size={15} /><span><b>{event.actorRole}</b> · {event.action} · {event.reason}</span>
@@ -581,14 +591,14 @@ function Overview({
           ))}
         </section>
       </div>
-      <div className="section-title"><h2>Five connected work areas</h2></div>
+      <div className="section-title"><h2>Open a case or payment record</h2></div>
       <div className="queue-list">
         {([
-          ["discovery", "Discovery", "Bounded queue with evidence references and unknowns."],
-          ["case", "Hotel cases", "Separate suspected issues, confirmed needs and cost review."],
-          ["support", "Programme support", "Quotes, contribution, approvals, delivery and outcome."],
-          ["funds", "Department funds", "Receipts, attribution, reservations and payment history."],
-          ["services", "InnMetric services", "Separate subscription/on-demand proposals and invoice records."],
+          ["discovery", "Discovery", "Check each hotel and its evidence."],
+          ["case", "Hotel cases", "Review savings or confirm a repair."],
+          ["support", "Programme support", "Follow a quote through payment and delivery."],
+          ["funds", "Department funds", "Trace contributions and supplier payments."],
+          ["services", "InnMetric services", "See direct hotel proposals and invoices."],
         ] as [Page, string, string][]).map(([target, title, detail]) => (
           <button className="queue-item work-area-link" key={target} onClick={() => onNavigate(target)}>
             <span className="queue-letter"><ArrowRight size={16} /></span><span className="queue-copy"><strong>{title}</strong><p>{detail}</p></span><span className="pill neutral">Open</span>
@@ -600,21 +610,21 @@ function Overview({
 }
 
 const WHO_ROLES: [string, string][] = [
-  ["InnMetric operator", "Finds the evidence, reviews savings and co-approves. Never holds or pays programme cash."],
-  ["Tourism Department", "Holds the pool. Posts receipts, reserves and records payments."],
-  ["Hotel representative", "Acts for one hotel at a time, chosen under the role picker."],
-  ["Service provider", "Sees its assigned quote and records delivery. No funding amounts."],
+  ["InnMetric operator", "Checks evidence and approves savings and support with the department."],
+  ["Tourism Department", "Verifies savings with InnMetric, holds the pool and pays suppliers."],
+  ["Hotel representative", "Confirms the hotel’s need, contribution and completed work."],
+  ["Service provider", "Quotes for the work and records delivery."],
 ];
 const WHO_HOTELS: [string, string][] = [
-  ["Hotel A", "Source property. Verified savings and the contribution come from here."],
-  ["Hotel B", "Beneficiary. Confirms its repair need, pays its own share and confirms the outcome."],
-  ["Hotel C", "A separate hotel with its own commercial inquiry. No access to Hotel B's case."],
+  ["Hotel A", "Contributes an agreed amount after savings are verified."],
+  ["Hotel B", "Requests a repair and pays part of the bill."],
+  ["Hotel C", "Requests a service directly from InnMetric."],
 ];
 
 function WhoIsWho() {
   return (
     <section className="card" id="who-is-who" style={{ marginTop: 16 }} data-testid="who-is-who">
-      <div className="card-title"><div><div className="card-kicker">Who is who</div><h2 style={{ marginTop: 6 }}>Four role types, three hotel identities</h2></div><span className="pill neutral">Simulated perspectives</span></div>
+      <div className="card-title"><div><h2>Who does what</h2></div><span className="pill neutral">Simulated perspectives</span></div>
       <div className="grid two">
         <div>
           <div className="card-kicker">Role types</div>
@@ -639,7 +649,7 @@ function MetricCard({ label, value, sub, onClick }: { label: string; value: stri
 
 function Discovery({ state, busy, onAction }: { state: DemoState; busy: boolean; onAction: ActionRunner }) {
   if (state.role === "provider") {
-    return <><PageHead eyebrow="Assigned service work" title="Discovery is not part of your assignment." text="Provider perspectives see the assigned quote and delivery workflow, not hotel discovery evidence." /><div className="notice">Open Programme support to review the assigned work and record delivery.</div></>;
+    return <><PageHead eyebrow="Assigned service work" title="Discovery is not part of your assignment." text="Suppliers see their own quote and delivery record." /><div className="notice">Open Programme support to record delivery.</div></>;
   }
   const records = [
     { id: "hotel-a", name: "Hotel A", refs: ["A-route", "A-check-1", "A-check-2"], defaultStatus: "Queued", tone: "red" },
@@ -650,12 +660,12 @@ function Discovery({ state, busy, onAction }: { state: DemoState; busy: boolean;
   return (
     <>
       <PageHead
-        eyebrow="Proposed programme · analysis of synthetic evidence"
+        eyebrow="Proposed programme"
         title="Discovery queue"
-        text="Process one candidate at a time. The queue is bounded, resumable and cites the exact fixture records it evaluated."
+        text="Check one hotel at a time. Each finding links to its evidence."
         action={<AppButton primary disabled={busy || state.role !== "innmetric" || state.discovery.cursor >= (state.scope?.candidateCount ?? 4)} onClick={() => void onAction("discovery.run")}><Compass size={15} /> Process next candidate</AppButton>}
       />
-      <div className="notice">No live crawling or external hotel/vendor data. A candidate signal never creates a funding decision.</div>
+      <div className="notice">These checks use sample records. A hotel must confirm its need before funding review.</div>
       <div className="section-title"><h2>Queue progress</h2><span className="pill neutral">{state.discovery.cursor} / {state.scope?.candidateCount ?? 4} processed</span></div>
       <div className="queue-list">
         {records.filter((record) => state.scope?.canViewPortfolio || record.id === state.scope?.hotelId).map((record) => {
@@ -673,14 +683,14 @@ function Discovery({ state, busy, onAction }: { state: DemoState; busy: boolean;
       </div>
       <div className="grid two" style={{ marginTop: 16 }}>
         {(state.scope?.canViewPortfolio || state.scope?.hotelId === "hotel-a") && <section className="card">
-          <div className="card-kicker">Hotel A · core route signal</div><h2 style={{ marginTop: 6 }}>Candidate failure, not a verdict.</h2>
+          <div className="card-kicker">Hotel A · booking link</div><h2 style={{ marginTop: 6 }}>Did the official booking link fail?</h2>
           <EvidenceRows state={state} ids={["A-route", "A-check-1", "A-check-2"]} />
-          <p className="footer-note">The confirmed official route and two distinct unblocked 404 observations are required. It does not imply savings or eligibility.</p>
+          <p className="footer-note">A finding requires two separate 404 errors on the confirmed official link.</p>
         </section>}
         {(state.scope?.canViewPortfolio || state.scope?.hotelId === "hotel-b") && <section className="card">
-          <div className="card-kicker">Hotel B · review-indicated need</div><h2 style={{ marginTop: 6 }}>Suggested carpentry needs confirmation.</h2>
+          <div className="card-kicker">Hotel B · guest reviews</div><h2 style={{ marginTop: 6 }}>Does the hotel need a carpenter?</h2>
           <EvidenceRows state={state} ids={["B-review-1", "B-review-2"]} />
-          <div className="notice" style={{ marginTop: 12 }}>Reviews cannot establish affordability. Hotel B's contribution is a separate fictional representative declaration.</div>
+          <div className="notice" style={{ marginTop: 12 }}>Hotel B confirms the repair and declares what it can pay.</div>
         </section>}
       </div>
     </>
@@ -713,11 +723,11 @@ function HotelCase({ state, busy, onAction }: { state: DemoState; busy: boolean;
   const canViewA = state.scope?.canViewPortfolio || (state.role === "hotel" && state.scope?.hotelId === "hotel-a");
   const canViewB = state.scope?.canViewPortfolio || (state.role === "hotel" && state.scope?.hotelId === "hotel-b");
   if (state.role === "provider") {
-    return <><PageHead eyebrow="Assigned service work" title="Hotel case records are not part of your assignment." text="Review the assigned quote, delivery status and required next action in Programme support." /><div className="notice">Provider views do not expose discovery evidence, hotel contributions, allocation records or programme cash.</div></>;
+    return <><PageHead eyebrow="Assigned service work" title="Hotel case records are not part of your assignment." text="Open Programme support for your quote and delivery record." /></>;
   }
   return (
     <>
-      <PageHead eyebrow="Proposed programme · versioned evidence and decisions" title="Hotel cases" text="Keep Hotel A's cost comparison separate from Hotel B's review-suggested need and representative declaration." />
+      <PageHead eyebrow="Proposed programme" title="Hotel cases" text="Hotel A reviews booking costs. Hotel B confirms a repair and its share of the bill." />
       <div className="grid two">
         {canViewA && state.savings && <section className="card">
           <div className="card-title"><div><div className="card-kicker">Hotel A · distribution costs</div><h2 style={{ marginTop: 6 }}>Baseline versus observed</h2></div><span className={`pill ${savingsVerified ? "teal" : "amber"}`}>{savingsVerified ? "Jointly verified" : state.savings.status.replaceAll("_", " ")}</span></div>
@@ -729,7 +739,7 @@ function HotelCase({ state, busy, onAction }: { state: DemoState; busy: boolean;
             ].map(([label, before, after]) => <tr key={label}><td>{label}</td><td className="num">{money(Number(before))}</td><td className="num">{money(Number(after))}</td><td className="num">{money(Number(before) - Number(after))}</td></tr>)}
             <tr><td><b>Calculated total</b></td><td className="num"><b>{money(baseline)}</b></td><td className="num"><b>{money(observed)}</b></td><td className="num"><b>{money(delta)}</b></td></tr>
           </tbody></table></div>
-          <div className="source-note" style={{ marginTop: 12 }}>Computed from integer AED minor units. Candidate difference remains signed. This synthetic comparison is not audited or a proven causal outcome.</div>
+          <div className="source-note" style={{ marginTop: 12 }}>Compare ad spend, commissions and direct booking costs before attributing savings.</div>
           <div className="section-title"><h3>Required reviewer checks</h3><span className="small muted">Each role approves the same version</span></div>
           <div className="check-list">
             {([
@@ -746,15 +756,15 @@ function HotelCase({ state, busy, onAction }: { state: DemoState; busy: boolean;
           <AppButton primary disabled={busy || !reviewer || !checks.scope || !checks.timing || !checks.channelMix || !checks.costs || delta === null || delta <= 0 || state.savings.status === "needs_evidence"} onClick={() => void onAction("savings.approve", { checks })}>
             Approve current comparison <Check size={14} />
           </AppButton>
-          <p className="footer-note">Savings verification creates no cash. Missing/incomparable evidence blocks approval; negative differences remain visible but cannot be certified as positive savings.</p>
+          <p className="footer-note">Both reviewers need comparable records and a positive saving. The pool changes only on receipt.</p>
         </section>}
 
         {canViewB && state.need && state.support && <section className="card">
           <div className="card-title"><div><div className="card-kicker">Hotel B · service need</div><h2 style={{ marginTop: 6 }}>Review signal, then confirmation</h2></div><span className={`pill ${state.need.confirmed ? "teal" : "amber"}`}>{state.need.confirmed ? "Hotel confirmed" : "Suggested only"}</span></div>
           <EvidenceRows state={state} ids={["B-review-1", "B-review-2", "B-confirmation"]} />
           <div className="data-row"><span className="data-label">Suggested service</span><b>Carpentry</b></div>
-          <div className="data-row"><span className="data-label">Hotel contribution declaration</span><b>{money(state.support.hotelContributionMinor)}</b></div>
-          <div className="notice">The separate representative declaration is synthetic and cannot be inferred from the reviews.</div>
+          <div className="data-row"><span className="data-label">Amount Hotel B can pay</span><b>{money(state.support.hotelContributionMinor)}</b></div>
+          <div className="notice">Hotel B’s representative supplies this amount.</div>
           <AppButton primary disabled={busy || state.role !== "hotel" || state.hotelId !== "hotel-b" || state.need.confirmed} onClick={() => void onAction("need.confirm")}>
             Confirm as Hotel B
           </AppButton>
@@ -770,7 +780,7 @@ function HotelCase({ state, busy, onAction }: { state: DemoState; busy: boolean;
       {state.scope?.canViewPortfolio && <section className="card" style={{ marginTop: 16 }}>
         <div className="card-title"><div><div className="card-kicker">Open evidence states</div><h2 style={{ marginTop: 6 }}>No discovery claim for Hotel C or D</h2></div></div>
         <div className="grid two">
-          <div className="evidence"><CircleAlert size={15} /><span><b>Hotel C</b> has no discovery evidence. Its independent commercial inquiry is not proof of a defect or need.</span></div>
+          <div className="evidence"><CircleAlert size={15} /><span><b>Hotel C</b> asked about services directly.</span></div>
           <div className="evidence warn"><ShieldAlert size={15} /><span><b>Hotel D</b> remains unverified. The route is unconfirmed and the observation was bot-blocked; no affordability inference.</span></div>
         </div>
       </section>}
@@ -786,15 +796,15 @@ function Support({ state, events, busy, onAction }: { state: DemoState; events: 
   const [outcome, setOutcome] = useState<"completed" | "partial" | "rejected">("completed");
   const [remaining, setRemaining] = useState("");
   if (!state.support || !state.scope?.canViewSupport) {
-    return <><PageHead eyebrow="Programme support" title="Assigned case only." text="This simulated perspective cannot inspect Hotel B provider work or another hotel's case." /><div className="notice">Switch to InnMetric, Tourism Department, Hotel B or the assigned service provider perspective.</div></>;
+    return <><PageHead eyebrow="Programme support" title="Assigned case only." text="This repair is visible to Hotel B, the supplier and the two reviewers." /></>;
   }
   const allocationReady = joint(state.support.allocation.approvals, state.support.allocation.version, state.support.requestedSubsidyMinor);
   const supportReady = joint(state.support.approvals, state.support.version, state.support.requestedSubsidyMinor);
   const allConfirmed = state.outcome?.status === "verified";
   return (
     <>
-      <PageHead eyebrow="Proposed programme · support for Hotel B" title="Confirm the need. Fund the work." text="Provider quote, Hotel B contribution, allocation authority, joint approvals, department funding, delivery and outcome confirmation are separate events." />
-      {state.role !== "provider" && <div className="notice">Cross-hotel support remains attributed to Hotel A and requires joint InnMetric/department authorization. Hotel A acknowledgement is not a gate.</div>}
+      <PageHead eyebrow="Hotel B · programme support" title="Confirm the need. Fund the work." text="Hotel B confirms the repair. The carpenter quotes, delivers the work and records completion." />
+      {state.role !== "provider" && <div className="notice">InnMetric and the department must approve using Hotel A’s contribution for Hotel B.</div>}
       <div className="grid two" style={{ marginTop: 16 }}>
         <section className="card">
           <div className="card-kicker">Confirmed case and quote</div><h2 style={{ marginTop: 6 }}>Carpentry · provider quote {money(state.support.quoteMinor)}</h2>
@@ -815,7 +825,7 @@ function Support({ state, events, busy, onAction }: { state: DemoState; events: 
             <div className="edit-panel">
               <div className="field"><label htmlFor="support-amount">Support request · AED</label><input className="input" id="support-amount" type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
               <AppButton disabled={busy || state.support.status === "reserved" || state.support.status === "paid"} onClick={() => void onAction("support.edit", { requestedSubsidyMinor: Math.round(Number(amount) * 100) })}>Save new case version</AppButton>
-              <p className="small muted">Changing amount or funding source creates a new version and clears prior approvals. Funded versions are locked.</p>
+              <p className="small muted">Changing the amount or source requires fresh approvals before funding.</p>
             </div>
           )}
           {state.role !== "provider" && <>
@@ -823,7 +833,7 @@ function Support({ state, events, busy, onAction }: { state: DemoState; events: 
             <AppButton disabled={busy || state.role !== "hotel" || state.hotelId !== "hotel-b" || state.directPayments.length > 0} onClick={() => void onAction("support.directPayment")}>
               Record Hotel B contribution {money(state.support.hotelContributionMinor)}
             </AppButton>
-            <p className="footer-note">{state.directPayments.length ? "Hotel contribution recorded; department cash is unchanged." : "Only the Hotel B representative can record this separate simulated contribution."}</p>
+            <p className="footer-note">{state.directPayments.length ? "Hotel B’s direct payment recorded." : "Hotel B records its own payment to the supplier."}</p>
           </>}
         </section>
         {state.role !== "provider" && <section className="card">
@@ -839,17 +849,17 @@ function Support({ state, events, busy, onAction }: { state: DemoState; events: 
           <div className="card-kicker">Independent support approval · version {state.support.version}</div>
           {(["innmetric", "department"] as const).map((role) => <div className="data-row" key={role}><span className="data-label">{ROLE_LABELS[role]}</span><b>{approvalFor(state.support.approvals, role, state.support.version, state.support.requestedSubsidyMinor) ? "Approved" : "Pending"}</b></div>)}
           <AppButton primary disabled={busy || !["innmetric", "department"].includes(state.role) || !state.need.confirmed || state.support.status === "reserved" || state.support.status === "paid"} onClick={() => void onAction("support.approve")}>Approve support request</AppButton>
-          <p className="footer-note">{allocationReady && supportReady ? "Both independent approval gates are complete. The department still has to reserve and pay." : "A missing reviewer blocks reservation; approvals are tied to the current version."}</p>
+          <p className="footer-note">{allocationReady && supportReady ? "Both approvals complete. The department can now reserve funds." : "Both reviewers must approve this version before funds can be reserved."}</p>
         </section>}
       </div>
       <div className="section-title" id="outcome-review"><h2>Provider delivery and outcome</h2><span className={`pill ${allConfirmed ? "teal" : "amber"}`} data-testid="outcome-status">{state.outcome.status.replaceAll("_", " ")} · {state.outcome.confirmations.length} of 3 confirmations</span></div>
       <div className="grid two">
         <section className="card">
-          <div className="card-kicker">Provider delivery</div><h3 style={{ marginTop: 7 }}>Delivery is not verification</h3>
+          <div className="card-kicker">Provider delivery</div><h3 style={{ marginTop: 7 }}>Supplier’s delivery record</h3>
           <div className="data-row"><span className="data-label">Delivery</span><b>{state.delivery.status.replaceAll("_", " ")}</b></div>
           {state.role === "provider" && <><label className="field-label" htmlFor="delivery-note">Delivery note</label><textarea className="text-area" id="delivery-note" maxLength={500} value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} /></>}
           <AppButton disabled={busy || state.role !== "provider" || state.support.status !== "paid"} onClick={() => void onAction("delivery.mark", { note: deliveryNote })}>Record provider delivery</AppButton>
-          <p className="footer-note">Provider delivery remains a submission. Tourism Department, Hotel B and InnMetric each review the outcome separately.</p>
+          <p className="footer-note">Hotel B, InnMetric and the department each confirm the result.</p>
         </section>
         <section className="card">
           <div className="card-kicker">Three-party outcome confirmation</div><h3 style={{ marginTop: 7 }}>Every confirmation is required</h3>
@@ -881,7 +891,7 @@ function OutcomeAudit({ events }: { events: DemoSnapshot["events"] }) {
   const entries = events.filter((event: any) => event.action === "delivery.mark" || event.action === "outcome.confirm");
   return (
     <section className="card" style={{ marginTop: 16 }} data-testid="outcome-audit">
-      <div className="card-title"><div><div className="card-kicker">Audit trail · saved on the server</div><h3 style={{ marginTop: 6 }}>Delivery and outcome events</h3></div><span className="pill neutral">{entries.length} events</span></div>
+      <div className="card-title"><div><div className="card-kicker">Audit trail</div><h3 style={{ marginTop: 6 }}>Delivery and outcome events</h3></div><span className="pill neutral">{entries.length} events</span></div>
       {entries.length === 0
         ? <p className="small muted">No delivery or outcome events yet.</p>
         : entries.map((event: any) => {
@@ -896,7 +906,7 @@ function OutcomeAudit({ events }: { events: DemoSnapshot["events"] }) {
             </div>
           );
         })}
-      <p className="footer-note">Visible to the perspectives that can see Hotel B's case. Entries are never edited after they are saved.</p>
+      <p className="footer-note">Each decision stays in the case history.</p>
     </section>
   );
 }
@@ -938,12 +948,12 @@ function Funds({ state, balances, busy, onAction }: { state: DemoState; balances
   const [correctionReason, setCorrectionReason] = useState("");
   const [correctionId, setCorrectionId] = useState("");
   if (!state.scope?.canViewFinance || !state.collection) {
-    return <><PageHead eyebrow="Department funds" title="Restricted financial view." text="Only InnMetric and Tourism Department can review the synthetic pool ledger. Hotel and provider perspectives cannot inspect department cash." /><div className="notice">Use the Tourism Department perspective to post a simulated receipt, reservation or payment.</div></>;
+    return <><PageHead eyebrow="Department funds" title="Restricted financial view." text="InnMetric and the department can review this ledger." /><div className="notice">Choose Tourism Department to record a receipt or payment.</div></>;
   }
   const collectionReady = joint(state.collection.approvals, state.collection.version, state.collection.amountMinor);
   return (
     <>
-      <PageHead eyebrow="Proposed programme · department-administered simulated ledger" title="Only collected cash can move." text="Savings, explicit collection approval, receipt, reservation, payment and correction records are separate events." />
+      <PageHead eyebrow="Tourism department · fund ledger" title="Only collected cash can move." text="InnMetric and the department approve collection. Only the department records receipts, reserves funds and pays suppliers." />
       <CashSequence state={state} />
       <div className="grid three">
         <div className="card"><div className="card-kicker">Cash</div><div className="metric num">{money(balances.cash)}</div><div className="metric-sub">Receipts less posted programme payments</div></div>
@@ -953,7 +963,7 @@ function Funds({ state, balances, busy, onAction }: { state: DemoState; balances
       <div className="grid two" style={{ marginTop: 16 }}>
         <section className="card">
           <div className="card-title"><div><div className="card-kicker">Hotel A attribution · explicit amount</div><h2 style={{ marginTop: 6 }}>Collection approval is separate</h2></div><span className={`pill ${state.collection.posted ? "teal" : "amber"}`}>{state.collection.posted ? "Receipt posted" : "Awaiting receipt"}</span></div>
-          <p className="small muted">No percentage is configured. This is a manually specified illustrative amount, not a rate calculation.</p>
+          <p className="small muted">The demo uses an agreed amount. The programme rate is open.</p>
           <div className="field"><label htmlFor="collection-amount">Amount · AED</label><input id="collection-amount" className="input" type="number" min="0.01" step="0.01" value={amount} disabled={state.collection.posted || state.role !== "department"} onChange={(e) => setAmount(e.target.value)} /></div>
           {!state.collection.posted && state.role === "department" && <AppButton disabled={busy || Number(amount) <= 0 || Math.round(Number(amount) * 100) === state.collection.amountMinor} onClick={() => void onAction("collection.set", { amountMinor: Math.round(Number(amount) * 100) })}>Save amount and renew approvals</AppButton>}
           <div className="data-row"><span className="data-label">Current approved version</span><b>v{state.collection.version} · {money(state.collection.amountMinor)}</b></div>
@@ -962,18 +972,18 @@ function Funds({ state, balances, busy, onAction }: { state: DemoState; balances
             <AppButton disabled={busy || !["innmetric", "department"].includes(state.role) || state.collection.posted} onClick={() => void onAction("collection.approve")}>Approve {money(state.collection.amountMinor)}</AppButton>
             <AppButton primary disabled={busy || state.role !== "department" || !collectionReady || state.collection.posted} onClick={() => void onAction("collection.post")}>Post simulated receipt <ArrowDownRight size={14} /></AppButton>
           </div>
-          <div className="notice red" style={{ marginTop: 12 }}>Joint approval does not create cash. Only the department can post the receipt after current savings and collection approvals.</div>
+          <div className="notice red" style={{ marginTop: 12 }}>The pool increases when the department records receipt of the approved contribution.</div>
         </section>
         <section className="card">
-          <div className="card-kicker">Department budget proposal</div><h2 style={{ marginTop: 6 }}>Not authorized. Not spendable.</h2>
+          <div className="card-kicker">Department budget proposal</div><h2 style={{ marginTop: 6 }}>Awaiting budget approval</h2>
           <div className="metric num" style={{ fontSize: 23 }}>{money(50000)}</div>
-          <p className="small muted">Synthetic fixture proposal only. It is neither an allocated budget nor a collected receipt.</p>
-          <div className="notice">Department may reserve only collected and attributed funds after the separate allocation and support gates pass.</div>
+          <p className="small muted">This proposed budget sits outside the pool.</p>
+          <div className="notice">The department reserves collected funds after both allocation and support approvals.</div>
           <div className="data-row"><span className="data-label">Hotel A attributed balance</span><b>{money(balances.attributable)}</b></div>
           <div className="data-row"><span className="data-label">Reservation</span><b>{state.reservations.at(-1)?.status ?? "None"}</b></div>
         </section>
       </div>
-      <div className="section-title"><h2>Hotel B · AED 200 support</h2><span className="pill neutral">{state.support.status}</span></div>
+      <div className="section-title"><h2>Hotel B · {money(state.support.requestedSubsidyMinor)} support</h2><span className="pill neutral">{state.support.status}</span></div>
       <div className="grid two">
         <section className="card">
           <div className="data-row"><span className="data-label">Need confirmed</span><b>{state.need.confirmed ? "Yes" : "No"}</b></div>
@@ -1004,7 +1014,7 @@ function Funds({ state, balances, busy, onAction }: { state: DemoState; balances
           {correctionId && <div className="edit-panel">
             <label className="field-label" htmlFor="correction-reason">Correction reason</label>
             <input className="text-input" id="correction-reason" maxLength={500} value={correctionReason} onChange={(e) => setCorrectionReason(e.target.value)} />
-            <div className="small muted">Correction request links to the original entry and has no immediate cash effect.</div>
+            <div className="small muted">A correction request links to the original entry for review.</div>
             <AppButton disabled={busy || state.role !== "department" || !correctionReason.trim()} onClick={() => { void onAction("ledger.correctionRequest", { originalEntryId: correctionId, proposedAmountMinor: state.ledger.find((item: any) => item.id === correctionId)?.amountMinor, reason: correctionReason }); setCorrectionId(""); setCorrectionReason(""); }}>Append correction request</AppButton>
           </div>}
         </section>
@@ -1017,13 +1027,13 @@ function Services({ state, busy, onAction }: { state: DemoState; busy: boolean; 
   const isHotelC = state.role === "hotel" && state.hotelId === "hotel-c";
   const isOperator = state.role === "innmetric";
   if (!isHotelC && !isOperator) {
-    return <><PageHead eyebrow="InnMetric commercial services" title="Restricted commercial view." text="Hotel C and InnMetric have access to this synthetic commercial lane; other hotel/provider perspectives do not." /><div className="notice">Commercial proposals remain separate from programme funds.</div></>;
+    return <><PageHead eyebrow="InnMetric commercial services" title="Restricted commercial view." text="This hotel request is visible to Hotel C and InnMetric." /><div className="notice">Hotels pay InnMetric directly for this work.</div></>;
   }
   const proposals = state.commercial.proposals;
   return (
     <>
-      <PageHead eyebrow="Separate from the proposed programme · InnMetric commercial services" title="Outside the programme pool." text="Subscription and on-demand proposals are separate commercial records. They do not create a programme withdrawal or a zero-price operation." />
-      <div className="notice teal">Hotel C has no discovery evidence. A commercial inquiry is not a discovery finding, service need or affordability judgment.</div>
+      <PageHead eyebrow="InnMetric · direct hotel services" title="Outside the programme pool." text="Hotels can request monitoring or one-off work directly from InnMetric. Pricing is pending." />
+      <div className="notice teal">Hotel C approached InnMetric directly for a quote.</div>
       <div className="grid two" style={{ marginTop: 16 }}>
         <section className="card">
           <div className="card-title"><div><div className="card-kicker">Hotel C · independent inquiry</div><h2 style={{ marginTop: 6 }}>Commercial conversation</h2></div><span className="pill neutral">Not discovery</span></div>
@@ -1045,12 +1055,12 @@ function Services({ state, busy, onAction }: { state: DemoState; busy: boolean; 
           <div className="card-kicker">Separate commercial records</div><h2 style={{ marginTop: 6 }}>Proposals and invoice drafts</h2>
           {proposals.length === 0 ? <p className="small muted">No proposal recorded.</p> : proposals.map((proposal: any) => (
             <div className="evidence" key={proposal.id} style={{ marginTop: 8 }}>
-              <FileText size={15} /><span><b>{proposal.type === "on_demand" ? "On-demand" : "Subscription"}</b> · Hotel C · {proposal.status} · price {money(proposal.priceMinor)} · separate commercial book</span>
+              <FileText size={15} /><span><b>{proposal.type === "on_demand" ? "On-demand" : "Subscription"}</b> · Hotel C · {proposal.status} · price {money(proposal.priceMinor)} · hotel contract</span>
               {isOperator && <AppButton disabled={busy} onClick={() => void onAction("commercial.invoiceDraft", { proposalId: proposal.id })}>Invoice draft</AppButton>}
             </div>
           ))}
           {state.commercial.invoices.map((invoice: any) => <div className="data-row" key={invoice.id}><span className="data-label">Invoice record · {invoice.status.replaceAll("_", " ")}</span><b>{money(invoice.amountMinor)}</b></div>)}
-          <div className="notice" style={{ marginTop: 12 }}>An invoice draft is recorded with a null amount and blocked status while pricing is unset. No checkout or programme-ledger entry is created.</div>
+          <div className="notice" style={{ marginTop: 12 }}>A draft invoice stays on hold until pricing is agreed.</div>
         </section>
       </div>
     </>
@@ -1060,16 +1070,16 @@ function Services({ state, busy, onAction }: { state: DemoState; busy: boolean; 
 function Guide({ current, onGo }: { current: number; onGo: (index: number) => void }) {
   return (
     <>
-      <PageHead eyebrow="Presenter guide · 10 to 12 minutes" title="Tell the story in sequence." text="The walkthrough panel moves the screen and the simulated role for you. Everything shown is synthetic." />
-      <div className="guide-layout"><section className="card"><h2>{STEPS.length} steps, one persistent session</h2>
+      <PageHead eyebrow="Presenter guide · 10 to 12 minutes" title="Pitch walkthrough" text="Choose a step to open its screen and role." />
+      <div className="guide-layout"><section className="card"><h2>{STEPS.length} demo steps</h2>
         {STEPS.map((step, index) => <div className={`guide-step${index === current ? " active" : ""}`} key={step.id}><div className="guide-number">{index + 1}</div><div><strong>{step.title}</strong><p>{step.seeing}</p></div><AppButton onClick={() => onGo(index)}>Open</AppButton></div>)}
       </section>
       <section className="card"><div className="card-kicker">What the demo does not establish</div><h3 style={{ marginTop: 8 }}>No endorsement or real funds</h3>
         <div className="list">
-          <div className="evidence"><Check size={15} /><span>Real deterministic arithmetic over supplied synthetic cost records.</span></div>
-          <div className="evidence warn"><ShieldAlert size={15} /><span>Role switcher is simulated, not production authentication.</span></div>
+          <div className="evidence"><Check size={15} /><span>Savings are calculated from sample hotel records.</span></div>
+          <div className="evidence warn"><ShieldAlert size={15} /><span>Each role shows its own records and actions.</span></div>
           <div className="evidence warn"><CircleAlert size={15} /><span>No live discovery, government affiliation, real payment or hotel access.</span></div>
-          <div className="evidence"><FileText size={15} /><span>Unset rates and prices display "Not configured". Nothing is treated as zero.</span></div>
+          <div className="evidence"><FileText size={15} /><span>Prices marked “Not configured” are open for agreement.</span></div>
         </div>
       </section></div>
     </>

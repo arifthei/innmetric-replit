@@ -10,7 +10,7 @@ await runJourney(async ({ evaluate, waitFor, clickButton, selectValue }) => {
   await clickButton("Programme overview");
   await selectValue("#role-picker", "innmetric");
   await waitFor(
-    "document.body.innerText.includes('From evidence to accountable service.')",
+    "document.querySelector('main h1')?.innerText === 'How one hotel’s savings can help another.'",
     "the InnMetric demo overview",
   );
 

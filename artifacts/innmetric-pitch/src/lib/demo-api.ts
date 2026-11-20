@@ -43,8 +43,8 @@ const SESSION_KEY = "innmetric-programme-demo-session-v1";
 
 /**
  * Where the programme API lives. Replit routes `/api` on the same origin, so that stays the default.
- * The Netlify build of innmetric.com/collab/ sets VITE_DEMO_API_BASE=/collab/api, which the site
- * proxies to the Replit API.
+ * The Netlify build of innmetric.com/collab/ sets VITE_DEMO_API_BASE=/collab/api, served by the site's
+ * Netlify demo function.
  */
 export function resolveApiBase(raw: string | undefined) {
   const value = (raw ?? "").trim().replace(/\/+$/, "");

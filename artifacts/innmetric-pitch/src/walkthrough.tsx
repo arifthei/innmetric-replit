@@ -62,44 +62,41 @@ export const HOTEL_STEPS: Step[] = [
   {
     id: "hotel-intake",
     track: "hotel",
-    title: "Intake",
-    seeing: "Demo Hotel A reports that its direct booking link fails for one room type, Deluxe King.",
+    title: "A failed booking link",
+    seeing: "Hotel A reports a broken Deluxe King booking link.",
     page: "hotel",
     role: "innmetric",
     anchor: "hs-intake",
     notes: [
-      "The hotel is synthetic: an independent GCC property selling direct and on two OTAs.",
-      "Two checks returned the same error page. Standard Twin from the same page works.",
-      "InnMetric works across the hotel's existing systems and replaces none of them. The service fee is not configured in this demo.",
+      "Two checks return HTTP 404. Standard Twin works from the same page.",
+      "InnMetric works across existing hotel systems. Fees remain to be agreed.",
     ],
   },
   {
     id: "hotel-audit",
     track: "hotel",
-    title: "Distribution Baseline Audit",
-    seeing: "The same room, dates, occupancy, terms, taxes and currency compared across the website, booking engine and two OTAs.",
+    title: "Check booking and distribution",
+    seeing: "Compare the same room, stay, guests, terms, taxes and currency.",
     page: "hotel",
     role: "innmetric",
     anchor: "hs-audit",
     notes: [
-      "Match first, then compare. OTA 2 looks AED 200 cheaper only because it shows the figure before taxes. Matched, there is no difference.",
-      "Symptoms and causes are separate lists. Three causes are established with the hotel.",
-      "OTA 1 is AED 50 lower on matched terms. The cause is not established, so the finding stays open. A price difference alone proves neither a fault nor a loss.",
+      "OTA 2 adds AED 200 in taxes; matched totals are equal.",
+      "Three causes are confirmed with the hotel. OTA 1 remains AED 50 lower for an unknown reason; that alone proves no loss.",
     ],
   },
   {
     id: "hotel-signoff",
     track: "hotel",
-    title: "The hotel signs off each change",
-    seeing: "Three proposed changes wait for the named hotel approver. Each one shows its reversal step.",
+    title: "The hotel approves",
+    seeing: "Three proposed repairs, each with a reversal step.",
     page: "hotel",
     role: "hotel",
     hotelId: "hotel-a",
     anchor: "hs-sprint",
     notes: [
-      "You are now the hotel's approver, Layla Haddad (fictional). Sign off CH1, CH2 and CH3 one at a time.",
-      "Nothing is proposed for the OTA 1 price finding. Rates and promotions are the hotel's decision.",
-      "InnMetric has no sign-off button of its own.",
+      "As Hotel A, approve CH1, CH2 and CH3. InnMetric cannot approve for the hotel.",
+      "No rate change is proposed for the unexplained OTA 1 gap.",
     ],
     play: CHANGE_IDS.map((changeId) => ({
       role: "hotel" as const,
@@ -112,15 +109,14 @@ export const HOTEL_STEPS: Step[] = [
   {
     id: "hotel-sprint",
     track: "hotel",
-    title: "Approved Repair Sprint",
-    seeing: "InnMetric applies only the signed-off changes. Any of them can be reversed with its documented step.",
+    title: "Fix approved issues",
+    seeing: "InnMetric applies the approved repairs.",
     page: "hotel",
     role: "innmetric",
     anchor: "hs-sprint",
     notes: [
-      "Apply is disabled until the approver has signed. The server enforces this, not only the button.",
-      "Changes are simulated. No live website, channel manager or listing is touched.",
-      "Optional: reverse one change to show that it then needs a new sign-off.",
+      "Apply is blocked until hotel approval.",
+      "Try reversing a repair: it needs fresh approval before applying again.",
     ],
     play: CHANGE_IDS.map((changeId) => ({
       role: "innmetric" as const,
@@ -132,16 +128,15 @@ export const HOTEL_STEPS: Step[] = [
   {
     id: "hotel-verify",
     track: "hotel",
-    title: "Verification and handover",
-    seeing: "Repeat booking checks after the changes, the items still open and the rechecks agreed at handover.",
+    title: "Recheck and hand over",
+    seeing: "Repeat the checks. Hand over fixed and open items.",
     page: "hotel",
     role: "innmetric",
     anchor: "hs-verify",
     notes: [
-      "Run the repeat checks. The Deluxe King link and booking engine search now read Bookable.",
-      "The OTA 1 difference is still observed and stays open. Handover lists it instead of hiding it.",
-      "The hotel approver acknowledges handover. Recheck intervals are illustrative, not a service timetable.",
-      "Below the handover: what the hotel gets, what it controls and the two commercial options, both priced as not configured.",
+      "The Deluxe King link opens and the room is offered. No payment or reservation is tested.",
+      "OTA 1 remains AED 50 lower; keep the finding open.",
+      "Hotel A acknowledges handover. Audit/repair and monitoring prices remain to be agreed.",
     ],
     play: [
       {
@@ -158,15 +153,14 @@ export const HOTEL_STEPS: Step[] = [
   {
     id: "hotel-control",
     track: "hotel",
-    title: "Ongoing Distribution Control",
-    seeing: "A small monitoring view with scheduled rechecks. Not bookable is shown in kaki.",
+    title: "Monitor for new issues",
+    seeing: "Scheduled checks catch problems after handover.",
     page: "hotel",
     role: "innmetric",
     anchor: "hs-control",
     notes: [
-      "Run the two scheduled rechecks. The second finds Standard Twin not bookable on OTA 2.",
-      "Monitoring reports and raises the item to the hotel. It changes nothing without approval and promises no permanent fix.",
-      "The subscription price is not configured. Then follow the link at the bottom to the proposed programme.",
+      "The second check finds Standard Twin unavailable on OTA 2. Raise it for hotel review.",
+      "Monitoring is a separate subscription. The next phase shows the proposed tourism programme.",
     ],
     play: [
       { role: "innmetric", action: "service.recheck", remaining: (s) => Math.max(0, 2 - (s.hotelService?.monitoring?.runs?.length ?? 0)) },
@@ -181,26 +175,25 @@ export const PROGRAMME_STEPS: Step[] = [
   {
     id: "programme-overview",
     track: "programme",
-    title: "Proposed programme and who is who",
-    seeing: "A proposal, not a live scheme. Four role types act in it; the hotel representative can speak for three different hotels.",
+    title: "Who does what",
+    seeing: "A proposed programme linking hotels, InnMetric, the department and providers.",
     page: "overview",
     role: "department",
     notes: [
-      "This part is a proposal for discussion. No department has adopted it.",
-      "Role types: InnMetric operator, Tourism Department, Hotel representative, Service provider. Hotel identities: Hotel A, Hotel B, Hotel C. Each hotel sees only its own records.",
-      "The department holds and administers the pool. InnMetric never holds it and cannot pay from it. Department cash starts at AED 0.00.",
+      "Each hotel sees its own records. Providers see assigned work.",
+      "The department holds and pays from the pool. InnMetric reviews but never holds it. Pool cash starts at AED 0.",
     ],
   },
   {
     id: "programme-discovery",
     track: "programme",
-    title: "InnMetric finds the evidence",
-    seeing: "InnMetric processes the bounded candidate queue. Each result cites the synthetic records it used.",
+    title: "Find the evidence",
+    seeing: "Review hotel signals and their supporting records.",
     page: "discovery",
     role: "innmetric",
     notes: [
-      "Hotel A: a candidate booking-path failure with two observations. Hotel B: a repair need suggested by reviews. Hotel C: no discovery evidence. Hotel D: unverified.",
-      "A signal never creates a funding decision. There is no live crawling.",
+      "A: repeated booking failure. B: reviews suggest repairs. C: no evidence. D: unverified.",
+      "Signals need review; they do not award funding. This queue uses fictional records.",
     ],
     play: [
       { role: "innmetric", action: "discovery.run", remaining: (s) => Math.max(0, 4 - (s.discovery?.cursor ?? 0)) },
@@ -209,27 +202,27 @@ export const PROGRAMME_STEPS: Step[] = [
   {
     id: "programme-source",
     track: "programme",
-    title: "Hotel A, the source property",
-    seeing: "Hotel A's representative sees only Hotel A: its cost comparison of AED 5,000 baseline and AED 4,000 observed. Hotel B's case is not visible here.",
+    title: "Hotel A: savings source",
+    seeing: "Hotel A sees its costs: AED 5,000 before and AED 4,000 after.",
     page: "case",
     role: "hotel",
     hotelId: "hotel-a",
     notes: [
-      "Hotel A is where verified savings would come from. Any contribution stays attributed to Hotel A.",
-      "Hotel A's acknowledgement is not a gate for later support to Hotel B; the joint InnMetric and department review is.",
+      "Any contribution remains attributed to Hotel A.",
+      "Cross-hotel support needs InnMetric and department approval; Hotel A acknowledgement is not a demo gate.",
     ],
   },
   {
     id: "programme-need",
     track: "programme",
-    title: "Hotel B confirms its need",
-    seeing: "Reviews suggested a carpentry repair at Hotel B. Only Hotel B's representative can confirm it.",
+    title: "Hotel B confirms the need",
+    seeing: "Reviews suggest a carpentry repair. Hotel B confirms it.",
     page: "case",
     role: "hotel",
     hotelId: "hotel-b",
     notes: [
-      "Press Confirm as Hotel B. The need changes from suggested to hotel confirmed.",
-      "Reviews cannot establish affordability. Hotel B's contribution is a separate declaration.",
+      "Choose Confirm as Hotel B.",
+      "Reviews do not prove affordability; the hotel declares its own contribution.",
     ],
     play: [
       { role: "hotel", hotelId: "hotel-b", action: "need.confirm", remaining: once((s) => s.need?.confirmed) },
@@ -238,13 +231,13 @@ export const PROGRAMME_STEPS: Step[] = [
   {
     id: "programme-savings",
     track: "programme",
-    title: "Savings are not cash",
-    seeing: "Hotel A's matched comparison gives AED 1,000 candidate savings. InnMetric and the department each sign off four attribution checks.",
+    title: "Verify savings",
+    seeing: "AED 1,000 candidate savings. Two reviewers check attribution.",
     page: "case",
     role: "innmetric",
     notes: [
-      "Tick the four checks and approve as InnMetric, then switch to the department and do the same.",
-      "Verified savings still create no cash. Department cash stays AED 0.00.",
+      "InnMetric and the department each review scope, timing, channel mix and costs.",
+      "Approval creates no cash. The pool remains AED 0.",
     ],
     play: [
       { role: "innmetric", action: "savings.approve", payload: { checks: CHECKS }, remaining: once((s) => signed(s.savings?.approvals, "innmetric", s.savings?.version)) },
@@ -254,14 +247,13 @@ export const PROGRAMME_STEPS: Step[] = [
   {
     id: "programme-receipt",
     track: "programme",
-    title: "A department receipt creates pool cash",
-    seeing: "The AED 1,000 collection is approved jointly, then the department posts a receipt. Only now does pool cash read AED 1,000.00.",
+    title: "Collect before spending",
+    seeing: "Approve the AED 1,000 collection separately. The department then records receipt.",
     page: "funds",
     role: "department",
     notes: [
-      "Approving savings does not approve a collection. The collection has its own joint approval.",
-      "Only the department can post the receipt. Try it as InnMetric and the server refuses.",
-      "The cash sequence at the top of the page ticks off each step. The AED 1,000 stays attributed to Hotel A.",
+      "Both reviewers approve the collection amount; savings approval does not replace this.",
+      "Only the receipt creates pool cash: AED 1,000 attributed to Hotel A.",
     ],
     play: [
       { role: "innmetric", action: "collection.approve", remaining: once((s) => signed(s.collection?.approvals, "innmetric", s.collection?.version)) },
@@ -272,25 +264,25 @@ export const PROGRAMME_STEPS: Step[] = [
   {
     id: "programme-quote",
     track: "programme",
-    title: "The provider's quote",
-    seeing: "The service provider sees its assigned job: an AED 500 carpentry quote and scope. It cannot see funding amounts, other hotels or programme cash.",
+    title: "The provider quotes",
+    seeing: "The provider sees its assigned AED 500 carpentry job.",
     page: "support",
     role: "provider",
     notes: [
-      "The provider could submit a revised quote here. Do it now or not at all: a revised quote clears every funding approval that came before it.",
-      "The seeded script keeps the AED 500 quote.",
+      "Changing the quote clears earlier funding approvals. This walkthrough keeps AED 500.",
+      "The provider cannot view programme balances or other hotels.",
     ],
   },
   {
     id: "programme-support",
     track: "programme",
-    title: "Funding for Hotel B",
-    seeing: "InnMetric and the department each approve the cross-hotel allocation and the support request. The department reserves AED 200 from the pool.",
+    title: "Approve support for Hotel B",
+    seeing: "Both reviewers approve support and cross-hotel use. The department reserves AED 200.",
     page: "support",
     role: "department",
     notes: [
-      "Using Hotel A's contribution for Hotel B needs explicit joint authorisation, capped at the approved amount.",
-      "After the reservation, AED 200 is held and AED 800 remains available.",
+      "Hotel A attribution stays traceable.",
+      "AED 200 reserved; AED 800 available.",
     ],
     play: [
       { role: "innmetric", action: "allocation.approve", remaining: once((s) => signed(s.support?.allocation?.approvals, "innmetric", s.support?.allocation?.version)) },
@@ -303,14 +295,13 @@ export const PROGRAMME_STEPS: Step[] = [
   {
     id: "programme-payments",
     track: "programme",
-    title: "Payments: AED 200 from the pool, AED 300 from Hotel B",
-    seeing: "The department records the AED 200 payment once. Hotel B pays its AED 300 directly. Pool cash is AED 800.",
+    title: "Pay for the repair",
+    seeing: "Department: AED 200. Hotel B direct: AED 300. Pool cash remaining: AED 800.",
     page: "funds",
     role: "department",
     notes: [
-      "InnMetric has no payment button. Programme payments are executed by the department only.",
-      "Hotel B's AED 300 goes straight to the provider and never enters department cash. Together they cover the AED 500 repair.",
-      "Posted entries are never overwritten. A correction is a linked request with no cash effect of its own.",
+      "Only the department executes pool payments. Hotel B pays the provider separately.",
+      "Corrections link to the original entry; a correction request moves no money.",
     ],
     play: [
       { role: "department", action: "support.pay", remaining: once((s) => s.support?.status === "paid") },
@@ -321,13 +312,12 @@ export const PROGRAMME_STEPS: Step[] = [
     id: "programme-delivery",
     track: "programme",
     title: "The provider records delivery",
-    seeing: "The provider marks the repair delivered. Delivery is a submission: the outcome now waits for three confirmations.",
+    seeing: "Repair delivered; three confirmations still needed.",
     page: "support",
     role: "provider",
     anchor: "outcome-review",
     notes: [
-      "Delivery alone cannot close the case.",
-      "The outcome audit below lists each event with who recorded it.",
+      "Delivery alone does not close the case. Each action stays in the audit trail.",
     ],
     play: [
       { role: "provider", action: "delivery.mark", remaining: once((s) => s.delivery?.status === "delivered") },
@@ -336,14 +326,13 @@ export const PROGRAMME_STEPS: Step[] = [
   {
     id: "programme-review",
     track: "programme",
-    title: "InnMetric and the department review the outcome",
-    seeing: "InnMetric and the department each confirm the delivered repair as completed. Two of three confirmations; the outcome stays open.",
+    title: "Two reviewers confirm",
+    seeing: "InnMetric and the department confirm the repair. Hotel B still needs to confirm.",
     page: "support",
     role: "department",
     anchor: "outcome-review",
     notes: [
-      "Each role confirms separately, for the same delivery version.",
-      "Two matching confirmations are not enough. The status stays awaiting confirmations.",
+      "Each reviews the same delivery version. Two confirmations do not close it.",
     ],
     play: [
       { role: "innmetric", action: "outcome.confirm", payload: OUTCOME, remaining: once(confirmedBy("innmetric")) },
@@ -353,15 +342,15 @@ export const PROGRAMME_STEPS: Step[] = [
   {
     id: "programme-closed",
     track: "programme",
-    title: "Hotel B's confirmation closes the outcome",
-    seeing: "Hotel B confirms the same result. On the third matching confirmation the outcome changes to verified.",
+    title: "Hotel B confirms the result",
+    seeing: "The third matching confirmation verifies completion.",
     page: "support",
     role: "hotel",
     hotelId: "hotel-b",
     anchor: "outcome-review",
     notes: [
-      "Press Confirm outcome as Hotel representative. The audit shows the status change on this confirmation.",
-      "Had any party chosen partial or rejected, the case would stay open with its remaining actions.",
+      "Confirm as Hotel B.",
+      "Partial or rejected work stays open with remaining actions.",
     ],
     play: [
       { role: "hotel", hotelId: "hotel-b", action: "outcome.confirm", payload: OUTCOME, remaining: once(confirmedBy("hotel")) },
@@ -370,14 +359,14 @@ export const PROGRAMME_STEPS: Step[] = [
   {
     id: "programme-hotel-c",
     track: "programme",
-    title: "Hotel C, a separate hotel",
-    seeing: "Hotel C's representative sees only Hotel C's records: its own commercial inquiry. Hotel B's case and programme cash are not visible.",
+    title: "Hotel C: a separate customer",
+    seeing: "Hotel C requests an InnMetric subscription outside the programme.",
     page: "services",
     role: "hotel",
     hotelId: "hotel-c",
     notes: [
-      "Same role type, different hotel identity. Open Programme support or Department funds to show the restricted views.",
-      "Hotel C requests a subscription. That is a commercial conversation, not discovery evidence or a programme case.",
+      "Hotel C sees its own commercial inquiry, not Hotel B or pool cash.",
+      "A commercial inquiry does not establish a fault or a funding case.",
     ],
     play: [
       { role: "hotel", hotelId: "hotel-c", action: "commercial.request", payload: { type: "subscription" }, remaining: once((s) => (s.commercial?.proposals ?? []).some((item: any) => item.hotelId === "hotel-c" && item.status === "requested")) },
@@ -386,14 +375,13 @@ export const PROGRAMME_STEPS: Step[] = [
   {
     id: "programme-commercial",
     track: "programme",
-    title: "Two separate books",
-    seeing: "InnMetric's own services are a separate commercial record. Prices are not configured and show as unset.",
+    title: "Keep commercial fees separate",
+    seeing: "InnMetric subscriptions and on-demand work have their own commercial records.",
     page: "services",
     role: "innmetric",
     notes: [
-      "Hotel fees for InnMetric services never pass through the department pool.",
-      "Unset prices stay unset. Nothing is shown as zero or free.",
-      "Close here: everything shown is synthetic, the programme is a proposal and the open items remain open.",
+      "Hotel fees never pass through the department pool.",
+      "Prices remain unset, not zero or free.",
     ],
   },
 ];
@@ -446,7 +434,7 @@ export function Walkthrough({
             <div className="walk-notes" data-testid="presenter-notes">
               <ul>{step.notes.map((note) => <li key={note}>{note}</li>)}</ul>
               {step.play && (
-                <button className="btn small" style={{ marginTop: 10 }} disabled={busy || !canPlay} onClick={onPlay} title="Records each simulated role's action for the walkthrough up to this step, through the same server checks as manual clicks.">
+                <button className="btn small" style={{ marginTop: 10 }} disabled={busy || !canPlay} onClick={onPlay} title="Runs the required demo actions through the usual approval checks.">
                   <Play size={13} /> Record this step's actions
                 </button>
               )}

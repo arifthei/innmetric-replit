@@ -45,7 +45,7 @@ await runJourney(async ({ evaluate, waitFor, clickButton, selectValue }) => {
   // 2. Audit: matched comparison, symptoms apart from causes, unresolved finding stays open.
   await next(2);
   const audit = await text();
-  for (const expected of ["Matched before comparing", "Occupancy", "Taxes", "Currency", "Symptoms", "Causes", "Cause not established", "Unresolved, stays open", "does not prove a fault"]) {
+  for (const expected of ["Matched before comparing", "Occupancy", "Taxes", "Currency", "Symptoms", "Causes", "Cause not established", "Unresolved, stays open", "A price gap alone proves no fault or loss"]) {
     assert.ok(audit.includes(expected), `Audit should show: ${expected}`);
   }
   assert.equal(
@@ -120,13 +120,13 @@ await runJourney(async ({ evaluate, waitFor, clickButton, selectValue }) => {
 
   // The department cannot open the hotel's commercial service record.
   await selectValue("#role-picker", "department");
-  await waitFor(has("Restricted commercial record."), "the department restriction");
+  await waitFor(has("Only Hotel A and InnMetric can view this commercial record."), "the department restriction");
   await selectValue("#role-picker", "innmetric");
-  await waitFor(has("Open the proposed programme"), "the programme link");
+  await waitFor(has("See the proposed programme"), "the programme link");
 
   // What the hotel gets, controls and can buy: both commercial options stay unset.
   const terms = await sectionText('[data-testid="hotel-terms"]');
-  for (const phrase of ["What the hotel gets", "What the hotel controls", "Commercial options", "OTA 1 price difference"]) {
+  for (const phrase of ["What the hotel gets", "What the hotel controls", "Commercial options", "Whether to investigate open price gaps"]) {
     assert.ok(terms.includes(phrase), `Hotel terms should include ${phrase}`);
   }
   assert.equal(await evaluate(`(document.querySelector('[data-testid="hotel-terms"]').innerText.match(/Not configured/g) ?? []).length`), 2);
@@ -149,7 +149,7 @@ await runJourney(async ({ evaluate, waitFor, clickButton, selectValue }) => {
     );
 
   // 7. The last hotel step links to the proposed programme. Who is who separates role types from hotels.
-  await clickButton("Open the proposed programme");
+  await clickButton("See the proposed programme");
   await waitFor(`${stepIs(7)} && ${exists('[data-testid="proposal-tag"]')}`, "the proposed programme overview");
   await roleIs("department");
   assert.ok((await text()).includes("AED 0.00"));

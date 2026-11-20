@@ -114,7 +114,7 @@ export function PartnerShell({
               ))}
             </nav>
             <div className="sidebar-bottom">
-              <p className="partner-side-note">Partner pitches are proposals. They use fictional data and run without the programme API.</p>
+              <p className="partner-side-note">Proposals for discussion, with fictional examples.</p>
             </div>
           </aside>
         )}
@@ -185,8 +185,8 @@ export function PartnerExchange({
 }) {
   return (
     <section className="pitch-section exchange" aria-labelledby="exchange-title" data-testid="partner-exchange">
-      <div className="hs-kicker">The exchange</div>
-      <h2 id="exchange-title">What each side brings, and what each could gain.</h2>
+      <div className="hs-kicker">Working together</div>
+      <h2 id="exchange-title">Who does what, and why.</h2>
       <div className="exchange-grid">
         <div><h3>What {partnerName} brings</h3><p>{partnerBrings}</p></div>
         <div><h3>What InnMetric brings</h3><p>{innmetricBrings}</p></div>
@@ -204,12 +204,12 @@ export function PitchClose({ commercial, question }: { commercial: ReactNode; qu
   return (
     <>
       <section className="pitch-section" aria-labelledby="commercial-title">
-        <div className="hs-kicker">Commercial starting point · proposal</div>
-        <h2 id="commercial-title">Each side is paid for its own work.</h2>
+        <div className="hs-kicker">Proposed terms</div>
+        <h2 id="commercial-title">Who pays for what?</h2>
         <div className="commercial-text">{commercial}</div>
       </section>
       <section className="pitch-section ask" aria-labelledby="ask-title" data-testid="pitch-ask">
-        <div className="hs-kicker">The ask</div>
+        <div className="hs-kicker">Next step</div>
         <h2 id="ask-title" className="ask-quote">“{question}”</h2>
       </section>
     </>

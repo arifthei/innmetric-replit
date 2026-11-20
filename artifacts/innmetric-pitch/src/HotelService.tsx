@@ -72,8 +72,8 @@ export function HotelService({
   if (!service) {
     return (
       <>
-        <div className="page-head"><div><div className="eyebrow">InnMetric hotel service</div><h1>Restricted commercial record.</h1><p className="lead">The hotel service record belongs to Demo Hotel A and InnMetric. The Tourism Department, other hotels and providers cannot open it.</p></div></div>
-        <div className="notice">Switch to the InnMetric operator or the Hotel A representative to view the service story.</div>
+        <div className="page-head"><div><div className="eyebrow">InnMetric hotel service</div><h1>Hotel A service record</h1><p className="lead">Only Hotel A and InnMetric can view this commercial record.</p></div></div>
+        <div className="notice">Choose InnMetric or Hotel A to view the service.</div>
       </>
     );
   }
@@ -94,10 +94,10 @@ export function HotelService({
   ];
   const stages: [string, string, string][] = [
     ["hs-intake", "Intake", "Recorded"],
-    ["hs-audit", "Distribution Baseline Audit", `${f.audit.findings.length} findings`],
-    ["hs-sprint", "Approved Repair Sprint", `${applied} of ${changes.length} applied`],
-    ["hs-verify", "Verification and handover", service.handover.acknowledged ? "Handed over" : latestRun ? `Repeat check ${latestRun.run}` : "Not started"],
-    ["hs-control", "Ongoing Distribution Control", `${service.monitoring.runs.length} of ${f.rechecks.length} rechecks`],
+    ["hs-audit", "Check booking and distribution", `${f.audit.findings.length} findings`],
+    ["hs-sprint", "Fix approved issues", `${applied} of ${changes.length} applied`],
+    ["hs-verify", "Recheck and hand over", service.handover.acknowledged ? "Handed over" : latestRun ? `Repeat check ${latestRun.run}` : "Not started"],
+    ["hs-control", "Monitor for new issues", `${service.monitoring.runs.length} of ${f.rechecks.length} rechecks`],
   ];
 
   return (
@@ -105,8 +105,9 @@ export function HotelService({
       <div className="page-head">
         <div>
           <div className="eyebrow">InnMetric hotel service · founder delivered</div>
-          <h1>Find it, fix it with the hotel, check it again.</h1>
-          <p className="lead">{f.hotel.name}. {f.hotel.profile}</p>
+          <h1>Find the fault. Fix it with approval. Check again.</h1>
+          <p className="lead">Check where guests land, compare like-for-like rates, and test the booking path.</p>
+          <p className="small muted">{f.hotel.name}. {f.hotel.profile}</p>
         </div>
       </div>
       <nav className="stage-strip" aria-label="Service stages">
@@ -128,7 +129,7 @@ export function HotelService({
             <blockquote className="hs-quote">"{f.intake.report}"</blockquote>
             <p className="small muted">{f.hotel.approver.name}, {f.hotel.approver.title}. {f.hotel.approver.note}.</p>
             <div className="rule" />
-            <div className="card-kicker">First observations · room type {f.intake.roomType}</div>
+            <div className="card-kicker">First checks · {f.intake.roomType}</div>
             <div className="list" style={{ marginTop: 8 }}>
               {(f.intake.observations as any[]).map((item) => (
                 <div className={`evidence${item.id === "intake-twin" ? "" : " warn"}`} key={item.id}>
@@ -152,7 +153,7 @@ export function HotelService({
       {/* 2. Audit */}
       <section className="hs-section" id="hs-audit" aria-labelledby="hs-audit-h">
         <div className="hs-kicker">Stage 2</div>
-        <h2 id="hs-audit-h">Distribution Baseline Audit</h2>
+        <h2 id="hs-audit-h">Check booking and distribution</h2>
         <div className="card">
           <div className="card-kicker">Matched before comparing</div>
           <dl className="match-grid">
@@ -174,11 +175,11 @@ export function HotelService({
               </tbody>
             </table>
           </div>
-          <p className="source-note" style={{ marginTop: 12 }}>Reference: {money(f.audit.referenceTotalMinor)}. {f.audit.referenceNote} A public price difference alone does not prove a fault or a revenue loss. Totals are synthetic.</p>
+          <p className="source-note" style={{ marginTop: 12 }}>Reference: {money(f.audit.referenceTotalMinor)}. {f.audit.referenceNote} A price gap alone proves no fault or loss. Demo figures.</p>
         </div>
         <div className="grid two" style={{ marginTop: 16 }}>
           <div className="card">
-            <div className="card-kicker">What was observed</div><h3 style={{ marginTop: 6 }}>Symptoms</h3>
+            <div className="card-kicker">Observed</div><h3 style={{ marginTop: 6 }}>Symptoms</h3>
             <div className="list">
               {(f.audit.symptoms as any[]).map((symptom) => (
                 <div className="hs-item" key={symptom.id}><span className="hs-id">{symptom.id}</span><span><b>{symptom.channel}.</b> {symptom.text}</span></div>
@@ -186,7 +187,7 @@ export function HotelService({
             </div>
           </div>
           <div className="card">
-            <div className="card-kicker">What explains it, where known</div><h3 style={{ marginTop: 6 }}>Causes</h3>
+            <div className="card-kicker">Established or still unknown</div><h3 style={{ marginTop: 6 }}>Causes</h3>
             <div className="list">
               {(f.audit.causes as any[]).map((cause) => {
                 const [label, tone] = CAUSE_LABEL[cause.status];
@@ -212,8 +213,8 @@ export function HotelService({
       {/* 3. Repair sprint */}
       <section className="hs-section" id="hs-sprint" aria-labelledby="hs-sprint-h">
         <div className="hs-kicker">Stage 3</div>
-        <h2 id="hs-sprint-h">Approved Repair Sprint</h2>
-        <p className="lead" style={{ marginBottom: 14 }}>Hotel approver: <b>{f.hotel.approver.name}</b>, {f.hotel.approver.title} ({f.hotel.approver.note.toLowerCase()}). Each live change needs this sign-off and can be undone with its reversal step.</p>
+        <h2 id="hs-sprint-h">Fix approved issues</h2>
+        <p className="lead" style={{ marginBottom: 14 }}>Hotel approver: <b>{f.hotel.approver.name}</b>, {f.hotel.approver.title} ({f.hotel.approver.note.toLowerCase()}). Every change needs hotel approval and a reversal step.</p>
         <div className="list">
           {changes.map((change) => {
             const record = service.changes[change.id];
@@ -250,14 +251,14 @@ export function HotelService({
           ))}
         </div>
         {isOperator && changes.some((change) => ["proposed", "reversed"].includes(service.changes[change.id].status)) && (
-          <p className="small muted" style={{ marginTop: 10 }}>InnMetric cannot sign off for the hotel. Switch to the Hotel A representative to record the approver's decision.</p>
+          <p className="small muted" style={{ marginTop: 10 }}>Choose Hotel A to approve. InnMetric cannot approve for the hotel.</p>
         )}
       </section>
 
-      {/* 4. Verification and handover */}
+      {/* 4. Recheck and hand over */}
       <section className="hs-section" id="hs-verify" aria-labelledby="hs-verify-h">
         <div className="hs-kicker">Stage 4</div>
-        <h2 id="hs-verify-h">Verification and handover</h2>
+        <h2 id="hs-verify-h">Recheck and hand over</h2>
         <div className="grid two">
           <div className="card">
             <div className="card-title">
@@ -273,7 +274,7 @@ export function HotelService({
                 </div>
               );
             })}
-            <p className="footer-note">Repeat checks are synthetic observations. A passing check describes that moment only.</p>
+            <p className="footer-note">Results describe this check only; no payment or reservation is tested.</p>
           </div>
           <div className="card">
             <div className="card-kicker">Open items at handover</div>
@@ -300,35 +301,35 @@ export function HotelService({
             <div>
               <div className="card-kicker">What the hotel gets</div>
               <ul className="hs-list">
-                <li>Matched evidence for each finding, with causes kept apart from symptoms</li>
-                <li>Only the changes its approver signed off, each with a reversal step</li>
-                <li>Repeat checks under the same conditions</li>
-                <li>A handover listing what is fixed and what is still open</li>
+                <li>Evidence with confirmed and unknown causes</li>
+                <li>Approved changes with reversal steps</li>
+                <li>Repeat checks on matched terms</li>
+                <li>Fixed and open items at handover</li>
               </ul>
             </div>
             <div>
               <div className="card-kicker">What the hotel controls</div>
               <ul className="hs-list">
-                <li>Sign-off on every live change, and its reversal</li>
+                <li>Approval of changes and reversals</li>
                 <li>Rates, promotions and availability rules</li>
                 <li>Its systems, accounts and data</li>
-                <li>Whether open items such as the OTA 1 price difference are pursued</li>
+                <li>Whether to investigate open price gaps</li>
               </ul>
             </div>
             <div>
               <div className="card-kicker">Commercial options</div>
-              <div className="data-row"><span className="data-label">Audit and Approved Repair Sprint</span><b className="data-value">{money(f.service.feeMinor)}</b></div>
-              <div className="data-row"><span className="data-label">Ongoing Distribution Control</span><b className="data-value">{money(f.service.subscriptionPriceMinor)}</b></div>
-              <p className="small muted" style={{ marginTop: 8 }}>Prices are not set in this demo, and no savings or revenue effect is claimed.</p>
+              <div className="data-row"><span className="data-label">Audit and repairs</span><b className="data-value">{money(f.service.feeMinor)}</b></div>
+              <div className="data-row"><span className="data-label">Monitor for new issues</span><b className="data-value">{money(f.service.subscriptionPriceMinor)}</b></div>
+              <p className="small muted" style={{ marginTop: 8 }}>Prices to agree. Revenue and savings unmeasured.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 5. Ongoing Distribution Control */}
+      {/* 5. Monitor for new issues */}
       <section className="hs-section" id="hs-control" aria-labelledby="hs-control-h">
         <div className="hs-kicker">Stage 5 · monitoring subscription</div>
-        <h2 id="hs-control-h">Ongoing Distribution Control</h2>
+        <h2 id="hs-control-h">Monitor for new issues</h2>
         <div className="grid two hs-control-grid">
           <div className="card">
             <div className="card-title">
@@ -347,7 +348,7 @@ export function HotelService({
                 </div>
               );
             })}
-            <p className="footer-note">Monitoring reports what it observes and raises items to the hotel. It changes nothing without hotel approval and promises no ranking or permanent fix.</p>
+            <p className="footer-note">New issues go to the hotel for review. Changes still need approval.</p>
           </div>
           <div className="card">
             <div className="card-kicker">Scheduled rechecks</div>
@@ -367,9 +368,9 @@ export function HotelService({
           <div>
             <div className="card-kicker">Proposed programme · second phase</div>
             <h3 style={{ marginTop: 6 }}>Could one hotel's verified savings help improve another?</h3>
-            <p className="small" style={{ margin: 0 }}>A tourism department would hold and administer contributions from verified hotel savings. InnMetric would never hold the pool. This service record does not establish any savings.</p>
+            <p className="small" style={{ margin: 0 }}>The department would manage agreed contributions from verified savings. InnMetric never holds the pool. This service demo proves no savings.</p>
           </div>
-          <button className="btn primary" onClick={onOpenProgramme}>Open the proposed programme <ArrowRight size={14} /></button>
+          <button className="btn primary" onClick={onOpenProgramme}>See the proposed programme <ArrowRight size={14} /></button>
         </div>
       </section>
     </>
